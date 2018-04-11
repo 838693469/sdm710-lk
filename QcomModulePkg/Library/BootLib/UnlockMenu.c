@@ -1,4 +1,4 @@
-/* Copyright (c) 2016-2017, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2016-2018, The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -326,6 +326,8 @@ DisplayUnlockMenu (INTN Type, BOOLEAN Value)
     DEBUG ((EFI_D_INFO, "Display menu is not enabled!\n"));
     Status = EFI_NOT_STARTED;
   }
+
+DEBUG ((EFI_D_VERBOSE, "[%p]\n", OptionMenuInfo));
 
   return Status;
 }
