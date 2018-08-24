@@ -145,7 +145,7 @@
   gQcomTokenSpaceGuid.RamdiskLoadAddress|0x03400000|UINT32|0x00015002
   gQcomTokenSpaceGuid.RamdiskEndAddress|0x05700000|UINT32|0x00015003
   gQcomTokenSpaceGuid.EnablePartialGoods|TRUE|BOOLEAN|0x00015004
-  gQcomTokenSpaceGuid.EnableDisplayMenu|FALSE|BOOLEAN|0x00015005
+  gQcomTokenSpaceGuid.EnableDisplayMenu|TRUE|BOOLEAN|0x00015005
   gQcomTokenSpaceGuid.KernelLoadAddress32|0x00008000|UINT32|0x00015006
   gQcomTokenSpaceGuid.EnableMdtpSupport|FALSE|BOOLEAN|0x00015007
   gQcomTokenSpaceGuid.AllowEio|FALSE|BOOLEAN|0x00015008
