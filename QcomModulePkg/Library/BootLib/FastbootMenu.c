@@ -323,8 +323,6 @@ VOID DisplayFastbootMenu (VOID)
   OPTION_MENU_INFO *OptionMenuInfo;
   OptionMenuInfo = &gMenuInfo;
 
-DEBUG ((EFI_D_INFO, "[%p]\n", OptionMenuInfo));
-
   if (FixedPcdGetBool (EnableDisplayMenu)) {
     DrawMenuInit ();
     OptionMenuInfo->LastMenuType = OptionMenuInfo->Info.MenuType;
