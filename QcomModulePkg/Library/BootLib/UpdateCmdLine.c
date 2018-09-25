@@ -232,7 +232,7 @@ TargetBatterySocOk (UINT32 *BatteryVoltage)
         return TRUE;
 
       DEBUG ((EFI_D_ERROR, "Error getting the info of charger: %r\n", Status));
-      return FALSE;
+      return TRUE;
     }
 
     *BatteryVoltage = FlashInfo.BattCurrVoltage;
