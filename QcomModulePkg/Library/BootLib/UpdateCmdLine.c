@@ -67,6 +67,7 @@ STATIC UINTN DisplayCmdLineLen = sizeof (DisplayCmdLine);
 
 #define MAX_DTBO_IDX_STR 64
 STATIC CHAR8 *AndroidBootDtboIdx = " androidboot.dtbo_idx=";
+extern CHAR8 boardID_cmdline[];//bug400055 add board id info to uefi,gouji@wt,20181023
 
 #if VERITY_LE
 STATIC BOOLEAN IsLEVerity (VOID)
@@ -377,6 +378,13 @@ UpdateCmdLineParams (UpdateCmdLineParamList *Param,
     Src = Param->CmdLine;
     AsciiStrCpyS (Dst, MaxCmdLineLen, Src);
   }
+  
+  //bug400055 add board id info to uefi,gouji@wt,20181023,start
+  if (Param->HaveCmdLine) {
+    Src = boardID_cmdline;
+    AsciiStrCatS (Dst, MaxCmdLineLen, Src);
+  }
+  //bug400055 add board id info to uefi,gouji@wt,20181023,end
 
   if (Param->VBCmdLine != NULL) {
     Src = Param->VBCmdLine;
@@ -688,6 +696,8 @@ UpdateCmdLine (CONST CHAR8 *CmdLine,
 
   GetDisplayCmdline ();
   CmdLineLen += AsciiStrLen (DisplayCmdLine);
+  
+  CmdLineLen += AsciiStrLen(boardID_cmdline);     //bug400055 add board id info to uefi,gouji@wt,20181023
 
   if (!IsLEVariant ()) {
     DtboIdx = GetDtboIdx ();

@@ -137,7 +137,7 @@
 # ASSERT_DEADLOOP_ENABLED    0x20
 
   gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x2f
-  gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x80000042
+  gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x80400042
   gEfiMdePkgTokenSpaceGuid.PcdReportStatusCodePropertyMask|0x06
 
 ################################################################################

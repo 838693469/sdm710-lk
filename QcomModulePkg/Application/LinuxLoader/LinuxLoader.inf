@@ -108,6 +108,7 @@
 	gEfiPartitionRecordGuid
 	gEfiResetReasonProtocolGuid
 	gQcomRngProtocolGuid
+	gEfiTLMMProtocolGuid
 
 [FixedPcd]
         gQcomTokenSpaceGuid.EnableMdtpSupport

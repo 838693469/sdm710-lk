@@ -42,15 +42,35 @@
 #include <Library/PartitionTableUpdate.h>
 #include <Library/ShutdownServices.h>
 #include <Library/StackCanary.h>
+#include <Protocol/EFITlmm.h>
 
 #define MAX_APP_STR_LEN 64
 #define MAX_NUM_FS 10
 #define DEFAULT_STACK_CHK_GUARD 0xc0c0c0c0
 
+CHAR8 boardID_cmdline[36] = {'\0'};  //bug400055 add board id info to uefi,gouji@wt,20181023
 STATIC BOOLEAN BootReasonAlarm = FALSE;
 STATIC BOOLEAN BootIntoFastboot = FALSE;
 STATIC BOOLEAN BootIntoRecovery = FALSE;
 
+STATIC UINT32 board_value = 0;
+STATIC UINT32 board_value2 = 0;
+
+//bug400055 add board id info to uefi,gouji@wt,20181023,start
+struct board_resistor_name
+{
+	UINT32 resistor_value;
+	CHAR8 board_name[64];
+};
+
+STATIC struct board_resistor_name board_id_arr[] =
+{
+	{0, "Reserved"},
+	{1, "K81923EA1"},
+	{2, "K81923DA1"},
+	{3, "K81923AA1"},
+};
+//bug400055 add board id info to uefi,gouji@wt,20181023,end
 STATIC VOID* UnSafeStackPtr;
 
 STATIC EFI_STATUS __attribute__ ( (no_sanitize ("safe-stack")))
@@ -109,6 +129,105 @@ STATIC EFI_STATUS MdtpDisable (VOID)
   return Status;
 }
 
+//bug400055 add board id info to uefi,gouji@wt,20181023,start
+#define WT_GPIO_BOARDID1  115
+#define WT_GPIO_BOARDID2  116
+
+#define WT_HW_BOARDID3  117  //最低位
+#define WT_HW_BOARDID2  113
+#define WT_HW_BOARDID1  114  //最高位
+
+STATIC UINT8 Read_BoardId(VOID)
+{
+	EFI_STATUS Status = EFI_SUCCESS;
+	EFI_TLMM_PROTOCOL *TLMMProtocol = NULL;
+	UINT32 config;
+	UINT32 value;
+
+	/* Locate the TLMM protocol & then configure the GPIO 115/116 */
+	Status = gBS->LocateProtocol( &gEfiTLMMProtocolGuid, NULL, (void**)&TLMMProtocol);
+	if(EFI_SUCCESS != Status)
+	{
+		DEBUG((EFI_D_ERROR, "Locate TLMM Protocol Failed!\n"));
+		return Status;
+	}
+
+	/* Configure the BoardId line & enable it */
+	config =  EFI_GPIO_CFG( WT_GPIO_BOARDID2, 0, GPIO_INPUT, GPIO_PULL_UP, GPIO_2MA );
+	Status = TLMMProtocol->ConfigGpio((UINT32)config,TLMM_GPIO_ENABLE);
+	if (Status != EFI_SUCCESS)
+	{
+		DEBUG((EFI_D_ERROR, "Unable to Configure MSM GPIO %d ENABLE !!\n",WT_GPIO_BOARDID2));
+	}
+	//Status = TLMMProtocol->GpioIn(config, &value);
+	TLMMProtocol->GpioIn(config, &value);
+
+	DEBUG((EFI_D_ERROR, "board_value, MSM GPIO %u =%u\n",WT_GPIO_BOARDID2,value));
+	board_value = value << 1;
+	config =  EFI_GPIO_CFG( WT_GPIO_BOARDID1, 0, GPIO_INPUT, GPIO_PULL_UP, GPIO_2MA );
+	Status = TLMMProtocol->ConfigGpio((UINT32)config,TLMM_GPIO_ENABLE);
+	if (Status != EFI_SUCCESS)
+	{
+		DEBUG((EFI_D_ERROR, "Unable to Configure MSM GPIO %d ENABLE !!\n",WT_GPIO_BOARDID1));
+	}
+	Status = TLMMProtocol->GpioIn(config, &value);
+
+	DEBUG((EFI_D_ERROR, "board_value,MSM GPIO %u =%u\n",WT_GPIO_BOARDID1,value));
+	board_value += value;
+
+	DEBUG((EFI_D_ERROR, "board_value is 0x%x !!\n",board_value));
+	return Status;
+}
+STATIC UINT8 Read_HW_BoardId(VOID)
+{
+	EFI_STATUS Status = EFI_SUCCESS;
+	EFI_TLMM_PROTOCOL *TLMMProtocol = NULL;
+	UINT32 config;
+	UINT32 value;
+
+	/* Locate the TLMM protocol & then configure the GPIO 42/43/40 */
+	Status = gBS->LocateProtocol( &gEfiTLMMProtocolGuid, NULL, (void**)&TLMMProtocol);
+	if(EFI_SUCCESS != Status)
+	{
+		DEBUG((EFI_D_ERROR, "Locate TLMM Protocol Failed!\n"));
+		return Status;
+	}
+
+	/* Configure the BoardId line & enable it */
+	config =  EFI_GPIO_CFG( WT_HW_BOARDID1, 0, GPIO_INPUT, GPIO_PULL_UP, GPIO_2MA );
+	Status = TLMMProtocol->ConfigGpio((UINT32)config,TLMM_GPIO_ENABLE);
+	if (Status != EFI_SUCCESS)
+	{
+		DEBUG((EFI_D_ERROR, "Unable to Configure MSM GPIO %d ENABLE !!\n",WT_HW_BOARDID1));
+	}
+	//Status = TLMMProtocol->GpioIn(config, &value);
+	TLMMProtocol->GpioIn(config, &value);
+	board_value2 = value << 2;
+	config =  EFI_GPIO_CFG( WT_HW_BOARDID2, 0, GPIO_INPUT, GPIO_PULL_UP, GPIO_2MA );
+	Status = TLMMProtocol->ConfigGpio((UINT32)config,TLMM_GPIO_ENABLE);
+	if (Status != EFI_SUCCESS)
+	{
+		DEBUG((EFI_D_ERROR, "Unable to Configure MSM GPIO %d ENABLE !!\n",WT_HW_BOARDID2));
+	}
+	//Status = TLMMProtocol->GpioIn(config, &value);
+	TLMMProtocol->GpioIn(config, &value);
+	board_value2 = value << 1;
+
+	config =  EFI_GPIO_CFG( WT_HW_BOARDID3, 0, GPIO_INPUT, GPIO_PULL_UP, GPIO_2MA );
+	Status = TLMMProtocol->ConfigGpio((UINT32)config,TLMM_GPIO_ENABLE);
+	if (Status != EFI_SUCCESS)
+	{
+		DEBUG((EFI_D_ERROR, "Unable to Configure MSM GPIO %d ENABLE !!\n",WT_HW_BOARDID3));
+	}
+	//Status = TLMMProtocol->GpioIn(config, &value);
+	TLMMProtocol->GpioIn(config, &value);
+	board_value2 += value;
+
+	DEBUG((EFI_D_ERROR, "board_value2 is 0x%x !!\n",board_value2));
+	return Status;
+}
+//bug400055 add board id info to uefi,gouji@wt,20181023,end
+
 STATIC UINT8
 GetRebootReason (UINT32 *ResetReason)
 {
@@ -146,6 +265,7 @@ LinuxLoaderEntry (IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
 
   UINT32 BootReason = NORMAL_MODE;
   UINT32 KeyPressed;
+  UINT32 i; /*board_index,*/  //bug400055 add board id info to uefi,gouji@wt,20181023
   /* MultiSlot Boot */
   BOOLEAN MultiSlotBoot;
 
@@ -165,6 +285,27 @@ LinuxLoaderEntry (IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
   StackGuardChkSetup ();
 
   BootStatsSetTimeStamp (BS_BL_START);
+  
+  //bug400055 add board id info to uefi,gouji@wt,20181023,start
+  Status = Read_BoardId();
+  Status |= Read_HW_BoardId();
+  DEBUG((EFI_D_INFO, "Board_id info %d,Read_HW_BoardId 0x%x\n", board_value,board_value2));
+  if (Status != EFI_SUCCESS)
+  {
+    DEBUG((EFI_D_ERROR, "Failed to get tlmm status: %r\n", Status));
+  }
+  for(i =0;i < sizeof(board_id_arr)/sizeof(board_id_arr[0]);i++)
+  {
+    if (board_value == board_id_arr[i].resistor_value)
+    {
+	   //board_index = i;
+	   AsciiStrnCpy(boardID_cmdline, " androidboot.board_id=", AsciiStrLen(" andriodboot.board_id="));
+	   AsciiStrCat(boardID_cmdline, board_id_arr[i].board_name);
+	   DEBUG((EFI_D_INFO, "Success gain %a\n",boardID_cmdline));
+	   break;
+    }
+  }
+  //bug400055 add board id info to uefi,gouji@wt,20181023,end
 
   // Initialize verified boot & Read Device Info
   Status = DeviceInfoInit ();
