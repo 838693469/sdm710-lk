@@ -985,6 +985,9 @@ DisplayVerifiedBootScreen (BootInfo *Info)
     }
     break;
   case ORANGE:
+#ifdef WT_ATO_FACTORY_BUILD
+    break;
+#else
     if (FfbmStr[0] != '\0' && !TargetBuildVariantUser ()) {
       DEBUG ((EFI_D_VERBOSE, "Device will boot into FFBM mode\n"));
     } else {
@@ -998,6 +1001,7 @@ DisplayVerifiedBootScreen (BootInfo *Info)
       }
     }
     break;
+#endif
   default:
     break;
   }
