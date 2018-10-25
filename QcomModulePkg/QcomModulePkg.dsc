@@ -100,6 +100,11 @@
   !if $(VERIFIED_BOOT)
       GCC:*_*_*_CC_FLAGS = -DVERIFIED_BOOT
   !endif
+
+  !if $(WT_ATO_FACTORY_BUILD)
+      GCC:*_*_*_CC_FLAGS = -DWT_ATO_FACTORY_BUILD
+  !endif
+
   !if $(VERIFIED_BOOT_2)
       GCC:*_*_*_CC_FLAGS = -DVERIFIED_BOOT_2
   !endif
