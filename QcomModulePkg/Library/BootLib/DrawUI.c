@@ -312,13 +312,22 @@ StrAlignRight (CHAR8 *Msg, CHAR8 *FilledChar, UINT32 ScaleFactorType)
 {
   UINT32 i = 0;
   UINT32 diff = 0;
-  CHAR8 StrSourceTemp[MAX_MSG_SIZE];
+  //CHAR8 StrSourceTemp[MAX_MSG_SIZE];
+  CHAR8 *StrSourceTemp = NULL; //modify for can't enter fastboot mode by jinzhao 20181025
   UINT32 Max_x = GetMaxFontCount ();
   UINT32 factor = GetFontScaleFactor (ScaleFactorType);
 
-  gBS->SetMem (StrSourceTemp, sizeof (StrSourceTemp), 0);
+  //gBS->SetMem (StrSourceTemp, sizeof (StrSourceTemp), 0); //modify for can't enter fastboot mode by jinzhao 20181025
   if (Max_x / factor > AsciiStrLen (Msg)) {
     diff = Max_x / factor - AsciiStrLen (Msg);
+/*Start: modify for can't enter fastboot mode by jinzhao 20181025*/
+    StrSourceTemp = AllocateZeroPool (MAX_MSG_SIZE);
+    if (StrSourceTemp == NULL) {
+      DEBUG ((EFI_D_ERROR,
+             "Failed to allocate zero pool for StrSourceTemp.\n"));
+      return;
+    }
+/*End: modify for can't enter fastboot mode by jinzhao 20181025*/
     for (i = 0; i < diff; i++) {
       AsciiStrnCatS (StrSourceTemp, MAX_MSG_SIZE, FilledChar, 1);
     }
@@ -335,17 +344,27 @@ StrAlignLeft (CHAR8 *Msg,
 {
   UINT32 i = 0;
   UINT32 diff = 0;
-  CHAR8 StrSourceTemp[MAX_MSG_SIZE];
+  //CHAR8 StrSourceTemp[MAX_MSG_SIZE];
+  CHAR8 *StrSourceTemp = NULL;  //modify for can't enter fastboot mode by jinzhao 20181025
   UINT32 Max_x = GetMaxFontCount ();
   UINT32 factor = GetFontScaleFactor (ScaleFactorType);
 
-  gBS->SetMem (StrSourceTemp, sizeof (StrSourceTemp), 0);
+ // gBS->SetMem (StrSourceTemp, sizeof (StrSourceTemp), 0);  //modify for can't enter fastboot mode by jinzhao 20181025
   if (Max_x / factor > AsciiStrLen (Msg)) {
     diff = Max_x / factor - AsciiStrLen (Msg);
+/*Start: modify for can't enter fastboot mode by jinzhao 20181025*/
+    StrSourceTemp = AllocateZeroPool (diff);
+    if (StrSourceTemp == NULL) {
+      DEBUG ((EFI_D_ERROR,
+             "Failed to allocate zero pool for StrSourceTemp.\n"));
+      return;
+    }
+/*End: modify for can't enter fastboot mode by jinzhao 20181025*/
     for (i = 0; i < diff; i++) {
       AsciiStrnCatS (StrSourceTemp, MAX_MSG_SIZE, FilledChar, 1);
     }
-    AsciiStrnCatS (Msg, MaxMsgSize, StrSourceTemp, Max_x / factor);
+   // AsciiStrnCatS (Msg, MaxMsgSize, StrSourceTemp, Max_x / factor);
+   AsciiStrnCatS (Msg, MaxMsgSize, StrSourceTemp, diff);  //modify for can't enter fastboot mode by jinzhao 20181025
   }
 }
 
