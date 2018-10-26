@@ -654,11 +654,13 @@ UpdateCmdLine (CONST CHAR8 *CmdLine,
     /* reduce kernel console messages to speed-up boot */
     CmdLineLen += AsciiStrLen (LogLevel);
   } else if (BatteryStatus &&
-             IsChargingScreenEnable () &&
+            // IsChargingScreenEnable () &&  //linjiashuo.WT, enable power off charging mode, 20181026
              !Recovery) {
+  #ifndef WT_COMPILE_FACTORY_VERSION
     DEBUG ((EFI_D_INFO, "Device will boot into off mode charging mode\n"));
     PauseAtBootUp = 1;
     CmdLineLen += AsciiStrLen (BatteryChgPause);
+  #endif
   } else if (AlarmBoot) {
     CmdLineLen += AsciiStrLen (AlarmBootCmdLine);
   }
