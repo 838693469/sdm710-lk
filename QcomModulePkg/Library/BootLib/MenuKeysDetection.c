@@ -137,7 +137,8 @@ UpdateDeviceStatus (OPTION_MENU_INFO *MsgInfo, INTN Reason)
     VerifiedBootMenuShowScreen (MsgInfo, MsgInfo->LastMenuType);
     StartTimer = GetTimerCountms ();
     break;
-  case FFBM:
+/*	  
+case FFBM:
     AsciiSPrint (FfbmPageBuffer, sizeof (FfbmPageBuffer), "ffbm-00");
     if (CardType == NAND) {
       Status = GetNandMiscPartiGuid (&Ptype);
@@ -147,6 +148,7 @@ UpdateDeviceStatus (OPTION_MENU_INFO *MsgInfo, INTN Reason)
     }
     RebootDevice (NORMAL_MODE);
     break;
+*/
   case QMMI:
     AsciiSPrint (FfbmPageBuffer, sizeof (FfbmPageBuffer), "ffbm-02");
     if (CardType == NAND) {
