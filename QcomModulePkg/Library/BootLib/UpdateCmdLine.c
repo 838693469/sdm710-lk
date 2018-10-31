@@ -656,7 +656,7 @@ UpdateCmdLine (CONST CHAR8 *CmdLine,
   } else if (BatteryStatus &&
             // IsChargingScreenEnable () &&  //linjiashuo.WT, enable power off charging mode, 20181026
              !Recovery) {
-  #ifndef WT_COMPILE_FACTORY_VERSION
+  #ifndef WT_ATO_FACTORY_BUILD
     DEBUG ((EFI_D_INFO, "Device will boot into off mode charging mode\n"));
     PauseAtBootUp = 1;
     CmdLineLen += AsciiStrLen (BatteryChgPause);
