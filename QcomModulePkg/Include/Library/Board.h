@@ -97,4 +97,6 @@ EFI_STATUS GetRamPartitions (RamPartitionEntry **RamPartitions,
                   UINT32 *NumPartitions);
 EFI_STATUS GetGranuleSize (UINT32 *MinPasrGranuleSize);
 VOID GetPageSize (UINT32 *PageSize);
+EFI_STATUS BoardGetSSNPSN(CHAR8 *SSN, CHAR8 *PSN);  //bug847136 add read ssn info,dingxiaobo@wt,20181102
+
 #endif

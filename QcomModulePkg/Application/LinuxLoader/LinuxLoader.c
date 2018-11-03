@@ -49,6 +49,8 @@
 #define DEFAULT_STACK_CHK_GUARD 0xc0c0c0c0
 
 CHAR8 boardID_cmdline[36] = {'\0'};  //bug400055 add board id info to uefi,gouji@wt,20181023
+CHAR8 g_SSN[30], g_PSN[30];//bug847136 add read ssn info,dingxiaobo@wt,20181102
+
 STATIC BOOLEAN BootReasonAlarm = FALSE;
 STATIC BOOLEAN BootIntoFastboot = FALSE;
 STATIC BOOLEAN BootIntoRecovery = FALSE;
@@ -329,6 +331,15 @@ LinuxLoaderEntry (IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
     DEBUG ((EFI_D_VERBOSE, "Multi Slot boot is supported\n"));
     FindPtnActiveSlot ();
   }
+
+  //bug847136 add read ssn info,dingxiaobo@wt,20181102,start
+  Status = BoardGetSSNPSN(g_SSN,g_PSN);
+  if (Status != EFI_SUCCESS)
+  {
+    DEBUG((EFI_D_ERROR, "Failed to get ssn psn status: %r\n", Status));
+  }
+  DEBUG((EFI_D_INFO, "SSN:%a  PSN:%a\n",g_SSN,g_PSN));
+  //bug847136 add read ssn info,dingxiaobo@wt,20181102,start
 
   Status = GetKeyPress (&KeyPressed);
   if (Status == EFI_SUCCESS) {

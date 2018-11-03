@@ -399,6 +399,81 @@ GetPageSize (UINT32 *PageSize)
     *PageSize = BlkIo->Media->BlockSize;
   }
 }
+//bug847136 add read ssn info,dingxiaobo@wt,20181102 start
+#define WT_FTM_PARTITION_NAME L"proinfo"
+#define WT_PHONEINFO_psn 0
+#define WT_PHONEINFO_ssn 30
+#define WT_SERIALNUM_LEN 15
+#define WT_BARCODE_LEN 64
+extern CHAR8 g_SSN[];
+extern EFI_STATUS PartitionGetInfo (
+IN CHAR16  *PartitionName,
+OUT EFI_BLOCK_IO_PROTOCOL **BlockIo,
+OUT EFI_HANDLE **Handle
+);
+EFI_STATUS BoardGetSSNPSN(CHAR8 *SSN, CHAR8 *PSN)
+{
+  EFI_STATUS Status;
+  EFI_BLOCK_IO_PROTOCOL *BlockIo = NULL;
+  EFI_HANDLE *Handle = NULL;
+  CHAR8 *Buffer;
+
+  Status = PartitionGetInfo(WT_FTM_PARTITION_NAME, &BlockIo, &Handle);
+  if (Status != EFI_SUCCESS)
+  {
+    DEBUG((EFI_D_ERROR,"open proinfo partition error\n"));
+    return Status;
+  }
+  if (!BlockIo)
+    return EFI_NOT_FOUND;
+
+  //Buffer = AllocatePool(BlockIo->Media->BlockSize);
+  Buffer = AllocatePool(BlockIo->Media->BlockSize);
+  if (!Buffer)
+  {
+    DEBUG((EFI_D_ERROR, "Failed to allocate memory for proinfo partition \n"));
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  Status = BlockIo->ReadBlocks(BlockIo,
+      BlockIo->Media->MediaId,
+      0,
+      BlockIo->Media->BlockSize,
+      Buffer);
+  if (Status != EFI_SUCCESS){
+    DEBUG((EFI_D_ERROR, "Failed to READ proinfo partition \n"));
+    return Status;
+  }
+
+  //0-30  psn
+  AsciiStrnCpy(PSN,(const CHAR8 *)(Buffer+WT_PHONEINFO_psn), WT_SERIALNUM_LEN);
+  PSN[WT_SERIALNUM_LEN] = '\0' ;
+  AsciiStrnCpy(SSN,(const CHAR8 *)(Buffer+WT_PHONEINFO_ssn), WT_SERIALNUM_LEN);
+  SSN[WT_SERIALNUM_LEN] = '\0' ;
+
+  DEBUG((EFI_D_ERROR, "read buffer ssn = %a ,--- len=%d --\n",SSN,AsciiStrLen(SSN)));
+  DEBUG((EFI_D_ERROR, "read buffer psn = %a ,--- len=%d --\n",PSN,AsciiStrLen(PSN)));
+
+
+  //31-64 ssn
+/*
+  if(AsciiStrLen(Buffer) > WT_SERIALNUM_LEN)
+  {
+    DEBUG((EFI_D_ERROR,"ssn too long just get before 15 \n"));
+    AsciiStrnCpy(SSN,(const CHAR8 *)(Buffer+WT_PHONEINFO_ssn), WT_SERIALNUM_LEN);
+    SSN[WT_SERIALNUM_LEN] = '\0' ;
+  }else{
+    AsciiStrnCpy(SSN,(const CHAR8 *)(Buffer+WT_PHONEINFO_ssn), AsciiStrLen(Buffer));
+    SSN[AsciiStrLen(Buffer)] = '\0' ;
+  }
+  DEBUG((EFI_D_ERROR, "read buffer ssn = %a ,--- len=%d --\n",SSN,AsciiStrLen(SSN)));
+*/
+  FreePool(Buffer);
+  return Status;
+}
+
+//bug847136 add read ssn info,dingxiaobo@wt,20181102  end
+
 
 UINT32
 BoardPmicModel (UINT32 PmicDeviceIndex)
@@ -538,6 +613,12 @@ UfsGetSetBootLun (UINT32 *UfsBootlun, BOOLEAN IsGet)
 EFI_STATUS
 BoardSerialNum (CHAR8 *StrSerialNum, UINT32 Len)
 {
+  //bug847136 add read ssn info,dingxiaobo@wt,20181103 start
+
+  AsciiStrnCpy(StrSerialNum,g_SSN,AsciiStrLen(g_SSN));
+  return EFI_SUCCESS;
+  //bug847136 add read ssn info,dingxiaobo@wt,20181103 end
+
   EFI_STATUS Status = EFI_INVALID_PARAMETER;
   MEM_CARD_INFO CardInfoData;
   EFI_MEM_CARDINFO_PROTOCOL *CardInfo;

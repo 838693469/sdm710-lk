@@ -130,7 +130,52 @@ VOID UpdatePartitionEntries (VOID)
     }
   }
 }
+  //bug847136 add read ssn info,dingxiaobo@wt,20181103 start
+EFI_STATUS
+PartitionGetInfo (IN CHAR16 *PartitionName,
+                  OUT EFI_BLOCK_IO_PROTOCOL **BlockIo,
+                  OUT EFI_HANDLE **Handle)
+{
+  EFI_STATUS Status;
+  EFI_PARTITION_ENTRY *PartEntry;
+  UINT16 i;
+  UINT32 j;
+  /* By default the LunStart and LunEnd would point to '0' and max value */
+  UINT32 LunStart = 0;
+  UINT32 LunEnd = GetMaxLuns ();
 
+  /* If Lun is set in the Handle flash command then find the block io for that
+   * lun */
+  //if (LunSet) {
+  //  LunStart = Lun;
+  //  LunEnd = Lun + 1;
+  //}
+  DEBUG ((EFI_D_ERROR, "To Get PartitionName :%s\n",PartitionName));
+
+  for (i = LunStart; i < LunEnd; i++) {
+    //DEBUG ((EFI_D_ERROR, "partition list-----start----\n"));
+    for (j = 0; j < Ptable[i].MaxHandles; j++) {
+      Status =
+          gBS->HandleProtocol (Ptable[i].HandleInfoList[j].Handle,
+                               &gEfiPartitionRecordGuid, (VOID **)&PartEntry);
+      if (EFI_ERROR (Status)) {
+        continue;
+      }
+      //DEBUG ((EFI_D_ERROR, "--   %s\n", PartEntry->PartitionName));
+      if (!(StrCmp (PartitionName, PartEntry->PartitionName))) {
+        *BlockIo = Ptable[i].HandleInfoList[j].BlkIo;
+        *Handle = Ptable[i].HandleInfoList[j].Handle;
+        return Status;
+      }
+    }
+    //DEBUG ((EFI_D_ERROR, "partition list-----end----\n"));
+  }
+
+  DEBUG ((EFI_D_ERROR, "Partition not found : %s\n", PartitionName));
+  return EFI_NOT_FOUND;
+}
+
+  //bug847136 add read ssn info,dingxiaobo@wt,20181103 end
 INT32
 GetPartitionIndex (CHAR16 *Pname)
 {
