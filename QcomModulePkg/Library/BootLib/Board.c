@@ -450,9 +450,18 @@ EFI_STATUS BoardGetSSNPSN(CHAR8 *SSN, CHAR8 *PSN)
   PSN[WT_SERIALNUM_LEN] = '\0' ;
   AsciiStrnCpy(SSN,(const CHAR8 *)(Buffer+WT_PHONEINFO_ssn), WT_SERIALNUM_LEN);
   SSN[WT_SERIALNUM_LEN] = '\0' ;
-
-  DEBUG((EFI_D_ERROR, "read buffer ssn = %a ,--- len=%d --\n",SSN,AsciiStrLen(SSN)));
-  DEBUG((EFI_D_ERROR, "read buffer psn = %a ,--- len=%d --\n",PSN,AsciiStrLen(PSN)));
+  if(AsciiStrLen(SSN) == 0)
+  {
+     DEBUG((EFI_D_ERROR, "read null ,so copy  to be default serialno\n"));
+     AsciiStrCpy (SSN, "123456789ABCDEF");
+  }
+  if(AsciiStrLen(PSN) == 0)
+  {
+     DEBUG((EFI_D_ERROR, "read null ,so copy  to be default psn\n"));
+     AsciiStrCpy (PSN, "223456789ABCDEF");
+  }
+  DEBUG((EFI_D_VERBOSE, "read buffer ssn = %a ,--- len=%d --\n",SSN,AsciiStrLen(SSN)));
+  DEBUG((EFI_D_VERBOSE, "read buffer psn = %a ,--- len=%d --\n",PSN,AsciiStrLen(PSN)));
 
 
   //31-64 ssn

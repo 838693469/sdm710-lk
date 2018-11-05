@@ -49,7 +49,7 @@
 #define DEFAULT_STACK_CHK_GUARD 0xc0c0c0c0
 
 CHAR8 boardID_cmdline[36] = {'\0'};  //bug400055 add board id info to uefi,gouji@wt,20181023
-CHAR8 g_SSN[30], g_PSN[30];//bug847136 add read ssn info,dingxiaobo@wt,20181102
+CHAR8 g_SSN[30] = {'\0'}, g_PSN[30]={'\0'};//bug847136 add read ssn info,dingxiaobo@wt,20181102
 
 STATIC BOOLEAN BootReasonAlarm = FALSE;
 STATIC BOOLEAN BootIntoFastboot = FALSE;
