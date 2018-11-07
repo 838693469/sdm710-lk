@@ -117,7 +117,9 @@
   !if $(USER_BUILD_VARIANT) == 0
       GCC:*_*_*_CC_FLAGS = -DENABLE_UPDATE_PARTITIONS_CMDS -DENABLE_BOOT_CMD -DENABLE_DEVICE_CRITICAL_LOCK_UNLOCK_CMDS
   !else
-      GCC:*_*_*_CC_FLAGS = -DUSER_BUILD_VARIANT
+#author:liulai@wingtech.com , user support update partition, this modify will be changed back in order to support whitelist
+#GCC:*_*_*_CC_FLAGS = -DUSER_BUILD_VARIANT
+      GCC:*_*_*_CC_FLAGS = -DUSER_BUILD_VARIANT -DENABLE_UPDATE_PARTITIONS_CMDS -DENABLE_BOOT_CMD -DENABLE_DEVICE_CRITICAL_LOCK_UNLOCK_CMDS
   !endif
   !if $(ENABLE_LE_VARIANT) == 1
       GCC:*_*_*_CC_FLAGS = -DENABLE_LE_VARIANT
