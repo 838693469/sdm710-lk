@@ -985,7 +985,7 @@ DisplayVerifiedBootScreen (BootInfo *Info)
     }
     break;
   case ORANGE:
-#ifdef WT_ATO_FACTORY_BUILD
+#if 1
     break;
 #else
     if (FfbmStr[0] != '\0' && !TargetBuildVariantUser ()) {
