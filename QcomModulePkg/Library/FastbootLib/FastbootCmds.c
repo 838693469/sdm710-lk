@@ -107,6 +107,7 @@ STATIC CHAR8 StrBatterySocOk[MAX_RSP_SIZE];
 STATIC CHAR8 ChargeScreenEnable[MAX_RSP_SIZE];
 STATIC CHAR8 OffModeCharge[MAX_RSP_SIZE];
 STATIC CHAR8 StrSocVersion[MAX_RSP_SIZE];
+STATIC CHAR8 StrChipID[MAX_RSP_SIZE];
 STATIC CHAR8 LogicalBlkSizeStr[MAX_RSP_SIZE];
 STATIC CHAR8 EraseBlkSizeStr[MAX_RSP_SIZE];
 
@@ -329,8 +330,8 @@ VOID PartitionDump (VOID)
   }
 }
 
-STATIC
-EFI_STATUS
+
+STATIC EFI_STATUS
 PartitionGetInfo (IN CHAR16 *PartitionName,
                   OUT EFI_BLOCK_IO_PROTOCOL **BlockIo,
                   OUT EFI_HANDLE **Handle)
@@ -1535,7 +1536,9 @@ ReenumeratePartTable (VOID)
   return Status;
 }
 
-
+extern CHAR8 g_SSN[];
+extern CHAR8 g_PSN[];
+extern CHAR8 ssn_cmdline[];
 /* Handle Flash Command */
 STATIC VOID
 CmdFlash (IN CONST CHAR8 *arg, IN VOID *data, IN UINT32 sz)
@@ -1704,6 +1707,7 @@ CmdFlash (IN CONST CHAR8 *arg, IN VOID *data, IN UINT32 sz)
                                      ARRAY_SIZE (PartitionName),
                                      mFlashDataBuffer, mFlashNumDataBytes);
   }
+
 
   /*
    * For Non-sparse image: Check flash result and update the result
@@ -2517,6 +2521,34 @@ CmdOemOffModeCharger (CONST CHAR8 *Arg, VOID *Data, UINT32 Size)
 }
 
 STATIC VOID
+CmdOemPoweroff (CONST CHAR8 *Arg, VOID *Data, UINT32 Size)
+{
+
+
+  DEBUG ((EFI_D_INFO, "Power Off the device\n"));
+  FastbootOkay ("");
+
+  ShutdownDevice();
+
+  // Shouldn't get here
+  FastbootFail ("Failed to ShutDown");
+}
+
+STATIC VOID
+CmdOemReadPSN (CONST CHAR8 *Arg, VOID *Data, UINT32 Size)
+{
+  CHAR8 PsnInfo[MAX_RSP_SIZE];
+  if(AsciiStrLen(g_PSN) == 0){
+    FastbootFail("");
+  }else{
+    AsciiSPrint (PsnInfo, sizeof (PsnInfo), "PSN: %a",g_PSN);
+    FastbootInfo (PsnInfo);
+    WaitForTransferComplete ();
+    FastbootOkay("");
+  }
+}
+
+STATIC VOID
 CmdOemSelectDisplayPanel (CONST CHAR8 *arg, VOID *data, UINT32 sz)
 {
   EFI_STATUS Status;
@@ -3028,9 +3060,9 @@ FastbootCommandSetup (IN VOID *base, IN UINT32 size)
 /*CAUTION(High): Enabling these commands will allow changing the partitions
  *like system,userdata,cachec etc...
  */
-#ifdef ENABLE_UPDATE_PARTITIONS_CMDS
       {"flash:", CmdFlash},
       {"erase:", CmdErase},
+#ifdef ENABLE_UPDATE_PARTITIONS_CMDS      
       {"set_active", CmdSetActive},
       {"flashing get_unlock_ability", CmdFlashingGetUnlockAbility},
       {"flashing unlock", CmdFlashingUnlock},
@@ -3055,6 +3087,8 @@ FastbootCommandSetup (IN VOID *base, IN UINT32 size)
       {"oem off-mode-charge", CmdOemOffModeCharger},
       {"oem select-display-panel", CmdOemSelectDisplayPanel},
       {"oem device-info", CmdOemDevinfo},
+      {"oem poweroff", CmdOemPoweroff},
+      {"oem read_psn", CmdOemReadPSN},
       {"continue", CmdContinue},
       {"reboot", CmdReboot},
       {"reboot-bootloader", CmdRebootBootloader},
@@ -3075,6 +3109,7 @@ FastbootCommandSetup (IN VOID *base, IN UINT32 size)
   FastbootPublishVar ("product", FullProduct);
   FastbootPublishVar ("serialno", StrSerialNum);
   FastbootPublishVar ("secure", IsSecureBootEnabled () ? "yes" : "no");
+  FastbootPublishVar ("secure_state", IsSecureBootEnabled () ? "yes" : "no");
   if (MultiSlotBoot) {
     /*Find ActiveSlot, bydefault _a will be the active slot
      *Populate MultiSlotMeta data will publish fastboot variables
@@ -3126,6 +3161,11 @@ FastbootCommandSetup (IN VOID *base, IN UINT32 size)
   AsciiSPrint (StrSocVersion, sizeof (StrSocVersion), "%x",
                 BoardPlatformChipVersion ());
   FastbootPublishVar ("hw-revision", StrSocVersion);
+
+  AsciiSPrint (StrChipID, sizeof (StrChipID), "%x",
+                BoardPlatformRawChipId ());
+  FastbootPublishVar ("chipid", StrChipID);
+
 
   /* Register handlers for the supported commands*/
   UINT32 FastbootCmdCnt = sizeof (cmd_list) / sizeof (cmd_list[0]);
