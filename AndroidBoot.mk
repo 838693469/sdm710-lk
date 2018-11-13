@@ -1,6 +1,9 @@
 #Android makefile to build bootloader as a part of Android Build
 CLANG_BIN := $(ANDROID_BUILD_TOP)/$(LLVM_PREBUILTS_PATH)/
 ABL_USE_SDLLVM := false
+#Extb841462,mayue.wt,18.11.13,modify,add sw_version inode,begin
+include $(ANDROID_BUILD_TOP)/bootable/bootloader/edk2/devinfo/rules.mk
+#Extb841462,mayue.wt,18.11.13,modify,add sw_version inode,end
 
 ifneq ($(wildcard $(SDCLANG_PATH)),)
   ifeq ($(shell echo $(SDCLANG_PATH) | head -c 1),/)
