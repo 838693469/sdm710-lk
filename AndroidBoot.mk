@@ -1,5 +1,6 @@
 #Android makefile to build bootloader as a part of Android Build
-CLANG_BIN := $(ANDROID_BUILD_TOP)/$(LLVM_PREBUILTS_PATH)/
+ANDROID_TOP=$(shell pwd)
+CLANG_BIN := $(ANDROID_TOP)/$(LLVM_PREBUILTS_PATH)/
 ABL_USE_SDLLVM := false
 #Extb841462,mayue.wt,18.11.13,modify,add sw_version inode,begin
 include $(ANDROID_BUILD_TOP)/bootable/bootloader/edk2/devinfo/rules.mk
@@ -9,11 +10,16 @@ ifneq ($(wildcard $(SDCLANG_PATH)),)
   ifeq ($(shell echo $(SDCLANG_PATH) | head -c 1),/)
     CLANG_BIN := $(SDCLANG_PATH)/
   else
-    CLANG_BIN := $(ANDROID_BUILD_TOP)/$(SDCLANG_PATH)/
+    CLANG_BIN := $(ANDROID_TOP)/$(SDCLANG_PATH)/
   endif
 
   ABL_USE_SDLLVM := true
 endif
+
+# Use host tools from prebuilts. Partner should determine the correct host tools to use
+PREBUILT_HOST_TOOLS := CC=$(ANDROID_TOP)/$(HOST_CC)\ \
+		       CXX=$(ANDROID_TOP)/$(HOST_CXX)\ \
+		       AR=$(ANDROID_TOP)/$(HOST_AR)
 
 DISABLE_PARALLEL_DOWNLOAD_FLASH := DISABLE_PARALLEL_DOWNLOAD_FLASH=0
 ifeq ($(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_SUPPORTS_VERITY),true)
@@ -74,11 +80,11 @@ endif
 TARGET_ARCHITECTURE := $(BOOTLOADER_ARCH)
 
 ifeq ($(TARGET_ARCHITECTURE),arm)
-	CLANG35_PREFIX := $(ANDROID_BUILD_TOP)/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-$(TARGET_GCC_VERSION)/bin/arm-linux-androideabi-
-	CLANG35_GCC_TOOLCHAIN := $(ANDROID_BUILD_TOP)/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-$(TARGET_GCC_VERSION)
+	CLANG35_PREFIX := $(ANDROID_TOP)/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-$(TARGET_GCC_VERSION)/bin/arm-linux-androideabi-
+	CLANG35_GCC_TOOLCHAIN := $(ANDROID_TOP)/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-$(TARGET_GCC_VERSION)
 else
-	CLANG35_PREFIX := $(ANDROID_BUILD_TOP)/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-$(TARGET_GCC_VERSION)/bin/aarch64-linux-android-
-	CLANG35_GCC_TOOLCHAIN := $(ANDROID_BUILD_TOP)/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-$(TARGET_GCC_VERSION)
+	CLANG35_PREFIX := $(ANDROID_TOP)/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-$(TARGET_GCC_VERSION)/bin/aarch64-linux-android-
+	CLANG35_GCC_TOOLCHAIN := $(ANDROID_TOP)/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-$(TARGET_GCC_VERSION)
 endif
 
 
@@ -98,6 +104,7 @@ $(TARGET_ABL): abl_clean | $(ABL_OUT) $(INSTALLED_KEYSTOREIMAGE_TARGET)
 	$(MAKE) -C bootable/bootloader/edk2 \
 		BOOTLOADER_OUT=../../../$(ABL_OUT) \
 		all \
+		PREBUILT_HOST_TOOLS=$(PREBUILT_HOST_TOOLS) \
 		$(BUILD_SYSTEM_ROOT_IMAGE) \
 		$(VERIFIED_BOOT) \
 		$(VERIFIED_BOOT_2) \
