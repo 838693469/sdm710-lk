@@ -95,7 +95,8 @@
   GCC:*_*_*_ARCHCC_FLAGS  = -Wno-shift-negative-value -fstack-protector-all -Wno-varargs -fno-common
   GCC:*_*_*_DLINK_FLAGS = -Ttext=0x0
   GCC:*_*_*_CC_FLAGS = -DZ_SOLO
-  GCC:*_*_*_CC_FLAGS = -DPRODUCT_NAME=\"$(BOARD_BOOTLOADER_PRODUCT_NAME)\"
+  #GCC:*_*_*_CC_FLAGS = -DPRODUCT_NAME=\"$(BOARD_BOOTLOADER_PRODUCT_NAME)\"
+  GCC:*_*_*_CC_FLAGS = -DPRODUCT_NAME=\"$(BOARD_BOOTLOADER_PRODUCT_NAME)\" -DWT_BUILD_TIME=\"$(WT_BUILD_TIME)\" -DWT_LK_VERSION=\"$(WT_LK_VERSION)\" -DWT_BUILD=\"$(WT_BUILD)\"
 
   !if $(VERIFIED_BOOT)
       GCC:*_*_*_CC_FLAGS = -DVERIFIED_BOOT

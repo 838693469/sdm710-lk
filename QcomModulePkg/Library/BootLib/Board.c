@@ -559,10 +559,15 @@ EFI_STATUS BoardInit (VOID)
                   CHIP_BASE_BAND_LEN, "%a", CHIP_BASE_BAND_MSM);
   }
 
+  DEBUG ((EFI_D_VERBOSE, "== LK info ==\n"));
+  DEBUG ((EFI_D_VERBOSE, "Meizu M1923 Smart Phone For Domain Official (%a)\n", WT_BUILD));
+  DEBUG ((EFI_D_VERBOSE, "Little Kernel ver (%a), (R:%a) (L:%d) Build Time %a\n", WT_LK_VERSION, "N", 0, WT_BUILD_TIME));
   DEBUG ((EFI_D_VERBOSE, "Raw Chip Id   : 0x%x\n",
           platform_board_info.RawChipId));
   DEBUG ((EFI_D_VERBOSE, "Chip Version  : 0x%x\n",
           platform_board_info.ChipVersion));
+  DEBUG ((EFI_D_VERBOSE, "== LK info ==\n"));
+
   DEBUG ((EFI_D_VERBOSE, "Foundry Id    : 0x%x\n",
           platform_board_info.FoundryId));
   DEBUG ((EFI_D_VERBOSE, "Chip BaseBand    : %a\n",
