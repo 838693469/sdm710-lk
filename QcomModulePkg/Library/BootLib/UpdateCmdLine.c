@@ -40,6 +40,7 @@
 #include <Protocol/EFIChipInfoTypes.h>
 #include <Protocol/EFIPmicPon.h>
 #include <Protocol/Print2.h>
+#include <wt_system_monitor.h>
 
 #include "AutoGen.h"
 #include <DeviceInfo.h>
@@ -53,7 +54,9 @@ STATIC CONST CHAR8 *LogLevel = " quite";
 STATIC CONST CHAR8 *BatteryChgPause = " androidboot.mode=charger";
 STATIC CONST CHAR8 *MdtpActiveFlag = " mdtp";
 STATIC CONST CHAR8 *AlarmBootCmdLine = " androidboot.alarmboot=true";
-
+#ifdef WT_BOOT_REASON
+STATIC CONST CHAR8 *BootReasonCmdline = " androidboot.bootreason=";
+#endif
 /*Send slot suffix in cmdline with which we have booted*/
 STATIC CHAR8 *AndroidSlotSuffix = " androidboot.slot_suffix=";
 STATIC CHAR8 *RootCmdLine = " rootwait ro init=";
@@ -406,6 +409,12 @@ UpdateCmdLineParams (UpdateCmdLineParamList *Param,
   Src = Param->StrSerialNum;
   AsciiStrCatS (Dst, MaxCmdLineLen, Src);
 
+
+  Src = Param->BootReasonCmdline;
+  AsciiStrCatS (Dst, MaxCmdLineLen, Src);
+  Src = Param->BootReason;
+  AsciiStrCatS (Dst, MaxCmdLineLen, Src);
+
   if (Param->FfbmStr &&
       (Param->FfbmStr[0] != '\0')) {
     Src = Param->AndroidBootMode;
@@ -590,12 +599,15 @@ UpdateCmdLine (CONST CHAR8 *CmdLine,
   UpdateCmdLineParamList Param = {0};
   CHAR8 DtboIdxStr[MAX_DTBO_IDX_STR] = "\0";
   INT32 DtboIdx = INVALID_PTN;
-
+#ifdef WT_BOOT_REASON
+  CHAR8 *bootreason = NULL;
+#endif
   Status = BoardSerialNum (StrSerialNum, sizeof (StrSerialNum));
   if (Status != EFI_SUCCESS) {
     DEBUG ((EFI_D_ERROR, "Error Finding board serial num: %x\n", Status));
     return Status;
   }
+
 
   if (CmdLine && CmdLine[0]) {
     if (IsLEVerity ()) {
@@ -640,6 +652,12 @@ UpdateCmdLine (CONST CHAR8 *CmdLine,
     CmdLineLen += AsciiStrLen (BootDeviceCmdLine);
     CmdLineLen += AsciiStrLen (BootDevBuf);
   }
+#ifdef WT_BOOT_REASON
+  bootreason = wt_boot_reason();
+  CmdLineLen += AsciiStrLen(BootReasonCmdline);
+  CmdLineLen += AsciiStrLen(bootreason);
+#endif
+
 
   CmdLineLen += AsciiStrLen (UsbSerialCmdLine);
   CmdLineLen += AsciiStrLen (StrSerialNum);
@@ -739,6 +757,8 @@ UpdateCmdLine (CONST CHAR8 *CmdLine,
   Param.RootCmdLine = RootCmdLine;
   Param.InitCmdline = InitCmdline;
   Param.DtboIdxStr = DtboIdxStr;
+  Param.BootReasonCmdline = BootReasonCmdline;	
+  Param.BootReason = bootreason;	
 
   Status = UpdateCmdLineParams (&Param, FinalCmdLine);
   if (Status != EFI_SUCCESS) {

@@ -43,7 +43,7 @@
 #include <Library/ShutdownServices.h>
 #include <Library/StackCanary.h>
 #include <Protocol/EFITlmm.h>
-
+#include <Library/wt_system_monitor.h>
 #define MAX_APP_STR_LEN 64
 #define MAX_NUM_FS 10
 #define DEFAULT_STACK_CHK_GUARD 0xc0c0c0c0
@@ -347,8 +347,12 @@ LinuxLoaderEntry (IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
       BootIntoFastboot = TRUE;
     if (KeyPressed == SCAN_UP)
       BootIntoRecovery = TRUE;
-    if (KeyPressed == SCAN_ESC)
-      RebootDevice (EMERGENCY_DLOAD);
+    if (KeyPressed == SCAN_ESC){
+#ifdef WT_SYSTEM_MONITOR
+	set_dload_magic_to_log_ptn();
+#endif
+        RebootDevice (EMERGENCY_DLOAD);
+    }
   } else if (Status == EFI_DEVICE_ERROR) {
     DEBUG ((EFI_D_ERROR, "Error reading key status: %r\n", Status));
     goto stack_guard_update_default;

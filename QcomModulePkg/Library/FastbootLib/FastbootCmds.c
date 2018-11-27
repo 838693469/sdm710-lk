@@ -81,6 +81,7 @@ found at
 #include "LinuxLoaderLib.h"
 #include "MetaFormat.h"
 #include "SparseFormat.h"
+#include "wt_bootloader_log_save.h"
 
 STATIC struct GetVarPartitionInfo part_info[] = {
     {"system", "partition-size:", "partition-type:", "", "ext4"},
@@ -2171,6 +2172,8 @@ CmdContinue (IN CONST CHAR8 *Arg, IN VOID *Data, IN UINT32 Size)
   BootLinux (&Info);
 }
 
+
+
 STATIC VOID UpdateGetVarVariable (VOID)
 {
   BOOLEAN BatterySocOk = FALSE;
@@ -3025,6 +3028,59 @@ Exit:
   return Status;
 }
 
+static uint32_t cal_checksum(void *buf, int len)
+{
+	uint32_t *_buf = buf;
+	int _len = len / sizeof(uint32_t);
+	uint32_t checksum = 0x55aa55aa;
+	int i;
+
+	for (i = 0; i < (_len); i++) {
+		checksum += *_buf++;
+	}
+	return checksum;
+}
+
+#define WT_MAX_SEND_SIZE  0x8000
+STATIC VOID CmdOemGetBKLog(CONST CHAR8 *arg, VOID *data, UINT32 sz)
+{
+	char response[MAX_RSP_SIZE] = {0};
+	struct wt_logbuf_info *head = (struct wt_logbuf_info *)WT_BOOTLOADER_LOG_ADDR;
+	uint32_t size = 0;
+
+	if (head->magic != WT_BOOTLOADER_LOG_MAGIC) {
+		FastbootFail("magic not match.");
+		return;
+	}
+
+	AsciiSPrint(response, MAX_RSP_SIZE, "UPLOAD_DATA_%08x_%a", WT_BOOTLOADER_LOG_SIZE, "bl_log.bin");
+	gBS->CopyMem(GetFastbootDeviceData().gTxBuffer, response, MAX_RSP_SIZE);
+	GetFastbootDeviceData().UsbDeviceProtocol->Send(ENDPOINT_OUT, MAX_RSP_SIZE , GetFastbootDeviceData().gTxBuffer);
+	WaitForTransferComplete();
+
+	while (size < WT_BOOTLOADER_LOG_SIZE) {
+		GetFastbootDeviceData().UsbDeviceProtocol->Send(ENDPOINT_OUT, WT_MAX_SEND_SIZE , ((void *)head + size));
+		size += WT_MAX_SEND_SIZE;
+		WaitForTransferComplete();
+	}
+	size = 0;
+	if (head->checksum != cal_checksum(&head->kernel_log_addr, sizeof(uint64_t) + sizeof(uint32_t))) {
+		FastbootFail("kernel addr not correct.");
+                return;
+	}
+
+	AsciiSPrint(response, MAX_RSP_SIZE, "UPLOAD_DATA_%08x_%a", head->kernel_log_size, "kern_log.bin");
+	gBS->CopyMem(GetFastbootDeviceData().gTxBuffer, response, MAX_RSP_SIZE);
+	GetFastbootDeviceData().UsbDeviceProtocol->Send(ENDPOINT_OUT, MAX_RSP_SIZE , GetFastbootDeviceData().gTxBuffer);
+	WaitForTransferComplete();
+
+	while (size < head->kernel_log_size) {
+		GetFastbootDeviceData().UsbDeviceProtocol->Send(ENDPOINT_OUT, WT_MAX_SEND_SIZE , (void *)(head->kernel_log_addr + size));
+		size += WT_MAX_SEND_SIZE;
+		WaitForTransferComplete();
+	}
+	FastbootOkay("");
+}
 /* Registers all Stock commands, Publishes all stock variables
  * and partitiion sizes. base and size are the respective parameters
  * to the Fastboot Buffer used to store the downloaded image for flashing
@@ -3089,6 +3145,7 @@ FastbootCommandSetup (IN VOID *base, IN UINT32 size)
       {"oem device-info", CmdOemDevinfo},
       {"oem poweroff", CmdOemPoweroff},
       {"oem read_psn", CmdOemReadPSN},
+      { "oem get_bk_log", CmdOemGetBKLog },
       {"continue", CmdContinue},
       {"reboot", CmdReboot},
       {"reboot-bootloader", CmdRebootBootloader},
