@@ -388,8 +388,10 @@ char *wt_get_exception_reset_reason()
 		wt_get_rst_reason();
 		return wt_bootreason;
 	}
+	/*
 	if (check_log_partition_save_bootreason())
 		return wt_bootreason;
+	*/	
 	return NULL;
 }
 
