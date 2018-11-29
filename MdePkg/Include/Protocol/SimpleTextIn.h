@@ -56,14 +56,14 @@ typedef struct {
 // EFI Scan codes
 //
 #define SCAN_NULL       0x0000
-#define SCAN_UP         0x0001
-#define SCAN_DOWN       0x0002
+#define SCAN_UP         0x0005 //linliwei modify
+#define SCAN_DOWN       0x0008 //linliwei modify
 #define SCAN_RIGHT      0x0003
 #define SCAN_LEFT       0x0004
-#define SCAN_HOME       0x0005
+#define SCAN_HOME       0x0001 //linliwei modify
 #define SCAN_END        0x0006
 #define SCAN_INSERT     0x0007
-#define SCAN_DELETE     0x0008
+#define SCAN_DELETE		0x0002  //linliwei modify
 #define SCAN_PAGE_UP    0x0009
 #define SCAN_PAGE_DOWN  0x000A
 #define SCAN_F1         0x000B
