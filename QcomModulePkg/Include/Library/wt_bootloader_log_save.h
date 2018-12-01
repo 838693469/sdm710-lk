@@ -3,10 +3,10 @@
 
 #include <libfdt_env.h>
 
-#define WT_BOOTLOADER_LOG_ADDR            0xA0000000
+#define WT_BOOTLOADER_LOG_ADDR            0xA1000000
 #define WT_BOOTLOADER_LOG_SIZE            0x00100000
 #define WT_BOOTLOADER_LOG_HALF_SIZE       0x00060000
-#define WT_PANIC_KEY_LOG_ADDR             0xA00C0000
+#define WT_PANIC_KEY_LOG_ADDR             0xA10C0000
 #define WT_BOOTLOADER_LOG_MAGIC           0x474C4C42  /* B L L G */
 #define WT_PANIC_KEY_LOG_MAGIC            0x474C4B50  /* P K L G */
 
