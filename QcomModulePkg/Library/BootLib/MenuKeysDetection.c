@@ -43,6 +43,8 @@
 #include <Uefi.h>
 
 #include <Protocol/EFIVerifiedBoot.h>
+#define VOLUME_DOWN1          0x0008
+#define VOLUME_UP1          0x0005
 
 STATIC UINT64 StartTimer;
 STATIC EFI_EVENT CallbackKeyDetection;
@@ -376,6 +378,8 @@ MenuKeysHandler (IN EFI_EVENT Event, IN VOID *Context)
     DEBUG ((EFI_D_ERROR, "Error reading key status: %r\n", Status));
     goto Exit;
   }
+  
+  DEBUG ((EFI_D_ERROR, "MenuKeysHandler: %r\n"));
 
   /* Initialize the key press start time when the key is pressed or released */
   if (LastKey != CurrentKey)
@@ -391,11 +395,11 @@ MenuKeysHandler (IN EFI_EVENT Event, IN VOID *Context)
   TimerDiff = GetTimerCountms () - KeyPressStartTime;
   if (TimerDiff > KEY_HOLD_TIME_MS || CurrentKey == SCAN_NULL) {
     switch (LastKey) {
-    case SCAN_UP:
+    case VOLUME_UP1:
       if (MenuPagesAction[MenuInfo->Info.MenuType].Up_Action_Func != NULL)
         MenuPagesAction[MenuInfo->Info.MenuType].Up_Action_Func (MenuInfo);
       break;
-    case SCAN_DOWN:
+    case VOLUME_DOWN1:
       if (MenuPagesAction[MenuInfo->Info.MenuType].Down_Action_Func != NULL)
         MenuPagesAction[MenuInfo->Info.MenuType].Down_Action_Func (MenuInfo);
       break;
