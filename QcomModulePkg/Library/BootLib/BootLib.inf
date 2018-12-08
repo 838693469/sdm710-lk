@@ -66,6 +66,7 @@
 	Rtic.c
 	PartialGoods.c
 	wt_boot_reason.c
+	LECmdLine.c
 
 [Packages]
 	ArmPkg/ArmPkg.dec
