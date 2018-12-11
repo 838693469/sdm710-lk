@@ -379,7 +379,7 @@ MenuKeysHandler (IN EFI_EVENT Event, IN VOID *Context)
     goto Exit;
   }
   
-  DEBUG ((EFI_D_ERROR, "MenuKeysHandler: %r\n"));
+  //DEBUG ((EFI_D_ERROR, "MenuKeysHandler: %r\n"));
 
   /* Initialize the key press start time when the key is pressed or released */
   if (LastKey != CurrentKey)
