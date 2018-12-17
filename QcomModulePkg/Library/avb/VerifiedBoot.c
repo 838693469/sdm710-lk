@@ -33,6 +33,7 @@
 #include <Library/MenuKeysDetection.h>
 #include <Library/VerifiedBootMenu.h>
 #include <Library/LEOEMCertificate.h>
+#include <Library/HypervisorMvCalls.h>
 
 STATIC CONST CHAR8 *VerityMode = " androidboot.veritymode=";
 STATIC CONST CHAR8 *VerifiedState = " androidboot.verifiedbootstate=";
@@ -47,7 +48,8 @@ static CHAR8 *avb_verify_partition_name[] = {
      "boot",
      "dtbo",
      "vbmeta",
-     "recovery"
+     "recovery",
+     "vm-linux"
 };
 
 STATIC struct verified_boot_verity_mode VbVm[] = {
@@ -126,8 +128,8 @@ AppendVBCommonCmdLine (BootInfo *Info)
 }
 
 STATIC EFI_STATUS
-NoAVBLoadDtboImage (BootInfo *Info, VOID **DtboImage,
-        UINT32 *DtboSize, CHAR16 *Pname)
+NoAVBLoadReqImage (BootInfo *Info, VOID **DtboImage,
+        UINT32 *DtboSize, CHAR16 *Pname, CHAR16 *RequestedPartition)
 {
   EFI_STATUS Status = EFI_SUCCESS;
   Slot CurrentSlot;
@@ -139,8 +141,8 @@ NoAVBLoadDtboImage (BootInfo *Info, VOID **DtboImage,
 
   GUARD ( StrnCpyS (Pname,
               (UINTN)MAX_GPT_NAME_SIZE,
-              (CONST CHAR16 *)L"dtbo",
-              StrLen (L"dtbo")));
+              (CONST CHAR16 *)RequestedPartition,
+              StrLen (RequestedPartition)));
 
   if (Info->MultiSlotBoot) {
       CurrentSlot = GetCurrentSlotSuffix ();
@@ -180,10 +182,16 @@ NoAVBLoadDtboImage (BootInfo *Info, VOID **DtboImage,
                                           AsciiPname,
                                           &PartSize);
   if (AvbStatus != AVB_IO_RESULT_OK ||
-      PartSize == 0 ||
-      PartSize > DTBO_MAX_SIZE_ALLOWED) {
+      PartSize == 0) {
     DEBUG ((EFI_D_ERROR, "VB: Failed to get partition size "
                          "(or) DTBO size is too big: 0x%x\n", PartSize));
+    Status = EFI_OUT_OF_RESOURCES;
+    goto out;
+  }
+
+  if ((AsciiStrStr (AsciiPname, "dtbo")) &&
+      (PartSize > DTBO_MAX_SIZE_ALLOWED)) {
+    DEBUG ((EFI_D_ERROR, "DTBO size is too big: 0x%x\n", PartSize));
     Status = EFI_OUT_OF_RESOURCES;
     goto out;
   }
@@ -191,7 +199,7 @@ NoAVBLoadDtboImage (BootInfo *Info, VOID **DtboImage,
   DEBUG ((EFI_D_VERBOSE, "VB: Trying to allocate memory "
                          "for DTBO: 0x%x\n", PartSize));
   *DtboSize = (UINT32) PartSize;
-  *DtboImage = AllocatePool (PartSize);
+  *DtboImage = AllocateZeroPool (PartSize);
 
   if (*DtboImage == NULL) {
     DEBUG ((EFI_D_ERROR, "VB: Unable to allocate memory for DTBO\n"));
@@ -240,7 +248,7 @@ VBAllocateCmdLine (BootInfo *Info)
   EFI_STATUS Status = EFI_SUCCESS;
 
   /* allocate VB command line*/
-  Info->VBCmdLine = AllocatePool (DTB_PAD_SIZE);
+  Info->VBCmdLine = AllocateZeroPool (DTB_PAD_SIZE);
   if (Info->VBCmdLine == NULL) {
     DEBUG ((EFI_D_ERROR, "VB CmdLine allocation failed!\n"));
     Status = EFI_OUT_OF_RESOURCES;
@@ -290,14 +298,14 @@ LoadImageNoAuth (BootInfo *Info)
     return EFI_LOAD_ERROR;
   }
   Info->NumLoadedImages = 1;
-  Info->Images[0].Name = AllocatePool (StrLen (Info->Pname) + 1);
+  Info->Images[0].Name = AllocateZeroPool (StrLen (Info->Pname) + 1);
   UnicodeStrToAsciiStr (Info->Pname, Info->Images[0].Name);
 
 
 load_dtbo:
   /*load dt overlay when avb is disabled*/
-  Status = NoAVBLoadDtboImage (Info, (VOID **)&(Info->Images[1].ImageBuffer),
-          (UINT32 *)&(Info->Images[1].ImageSize), Pname);
+  Status = NoAVBLoadReqImage (Info, (VOID **)&(Info->Images[1].ImageBuffer),
+          (UINT32 *)&(Info->Images[1].ImageSize), Pname, L"dtbo");
   if (Status == EFI_NO_MEDIA) {
       DEBUG ((EFI_D_ERROR, "No dtbo partition is found, Skip dtbo\n"));
       if (Info->Images[1].ImageBuffer != NULL) {
@@ -314,8 +322,35 @@ load_dtbo:
       return EFI_LOAD_ERROR;
   }
   Info-> NumLoadedImages = 2;
-  Info-> Images[1].Name = AllocatePool (StrLen (Pname) + 1);
+  Info-> Images[1].Name = AllocateZeroPool (StrLen (Pname) + 1);
   UnicodeStrToAsciiStr (Pname, Info->Images[1].Name);
+
+  /* Load vm-linux if Verified boot is disabled */
+  if (IsVmEnabled ()) {
+    Status = NoAVBLoadReqImage (Info, (VOID **)&(Info->Images[2].ImageBuffer),
+                                (UINT32 *)&(Info->Images[2].ImageSize), Pname,
+                                L"vm-linux");
+    if (Status == EFI_NO_MEDIA) {
+      DEBUG ((EFI_D_ERROR, "No vm-linux partition is found, Skip..\n"));
+      if (Info->Images[2].ImageBuffer != NULL) {
+        FreePool (Info->Images[2].ImageBuffer);
+      }
+
+      return EFI_SUCCESS;
+     } else if (Status != EFI_SUCCESS) {
+       DEBUG ((EFI_D_ERROR,
+               "ERROR: Failed to load vm-linux from partition: %r\n", Status));
+       if (Info->Images[2].ImageBuffer != NULL) {
+         FreePool (Info->Images[2].ImageBuffer);
+       }
+
+      return EFI_LOAD_ERROR;
+     }
+
+     Info-> NumLoadedImages = 3;
+     Info-> Images[2].Name = AllocateZeroPool (StrLen (Pname) + 1);
+     UnicodeStrToAsciiStr (Pname, Info->Images[2].Name);
+  }
 
   return Status;
 }
@@ -331,7 +366,11 @@ LoadImageNoAuthWrapper (BootInfo *Info)
   GUARD (LoadImageNoAuth (Info));
 
   if (!IsRootCmdLineUpdated (Info)) {
-    SystemPathLen = GetSystemPath (&SystemPath, Info);
+    SystemPathLen = GetSystemPath (&SystemPath,
+                                   Info->MultiSlotBoot,
+                                   Info->BootIntoRecovery,
+                                   (CHAR16 *)L"system",
+                                   (CHAR8 *)"root");
     if (SystemPathLen == 0 || SystemPath == NULL) {
       DEBUG ((EFI_D_ERROR, "GetSystemPath failed!\n"));
       return EFI_LOAD_ERROR;
@@ -394,7 +433,11 @@ LoadImageAndAuthVB1 (BootInfo *Info)
   }
 
   if (!IsRootCmdLineUpdated (Info)) {
-    SystemPathLen = GetSystemPath (&SystemPath, Info);
+    SystemPathLen = GetSystemPath (&SystemPath,
+                                   Info->MultiSlotBoot,
+                                   Info->BootIntoRecovery,
+                                   (CHAR16 *)L"system",
+                                   (CHAR8 *)"root");
     if (SystemPathLen == 0 || SystemPath == NULL) {
       DEBUG ((EFI_D_ERROR, "GetSystemPath failed!\n"));
       return EFI_LOAD_ERROR;
@@ -598,13 +641,13 @@ STATIC EFI_STATUS LEVerifyHashWithRSASignature (
         goto exit;
     }
 
-    Key.N = AllocatePool (sizeof (S_BIGINT));
+    Key.N = AllocateZeroPool (sizeof (S_BIGINT));
     if (Key.N == NULL) {
         DEBUG ((EFI_D_ERROR,
                 "VB: LEVerifySignature: mem allocation err for Key.N\n"));
         goto exit;
     }
-    Key.e = AllocatePool (sizeof (S_BIGINT));
+    Key.e = AllocateZeroPool (sizeof (S_BIGINT));
     if (Key.e == NULL) {
         DEBUG ((EFI_D_ERROR,
                 "VB: LEVerifySignature: mem allocation err for Key.e\n"));
@@ -751,6 +794,7 @@ LoadImageAndAuthVB2 (BootInfo *Info)
   CHAR8 *RequestedPartitionAll[MAX_NUM_REQ_PARTITION] = {NULL};
   CHAR8 **RequestedPartition = NULL;
   UINTN NumRequestedPartition = 0;
+  INT32 Index = INVALID_PTN;
   UINT32 ImageHdrSize = 0;
   UINT32 PageSize = 0;
   UINT32 ImageSizeActual = 0;
@@ -848,6 +892,28 @@ LoadImageAndAuthVB2 (BootInfo *Info)
     }
     AddRequestedPartition (RequestedPartitionAll, IMG_DTBO);
     NumRequestedPartition += 1;
+    if (IsVmEnabled ()) {
+      CHAR16 PartiName[MAX_GPT_NAME_SIZE];
+      Slot CurrentSlot;
+
+      GUARD (StrnCpyS (PartiName, (UINTN)MAX_GPT_NAME_SIZE,
+                        (CONST CHAR16 *)L"vm-linux", StrLen (L"vm-linux")));
+
+      if (Info->MultiSlotBoot) {
+        CurrentSlot = GetCurrentSlotSuffix ();
+        GUARD (StrnCatS (PartiName, MAX_GPT_NAME_SIZE,
+                         CurrentSlot.Suffix, StrLen (CurrentSlot.Suffix)));
+      }
+
+      Index = GetPartitionIndex (PartiName);
+    }
+    if (Index == INVALID_PTN ||
+               Index >= MAX_NUM_PARTITIONS) {
+      DEBUG ((EFI_D_ERROR, "Invalid vm-linux partition\n"));
+    } else {
+      AddRequestedPartition (RequestedPartitionAll, IMG_VMLINUX);
+      NumRequestedPartition += 1;
+    }
     Result = avb_slot_verify (Ops, (CONST CHAR8 *CONST *)RequestedPartition,
                 SlotSuffix, VerifyFlags, VerityFlags, &SlotData);
   }
@@ -1132,7 +1198,7 @@ STATIC EFI_STATUS LoadImageAndAuthForLE (BootInfo *Info)
     HashAlgorithm = VB_SHA256;
     HashSize = VB_SHA256_SIZE;
     ImgSize = Info->Images[0].ImageSize;
-    ImgHash = AllocatePool (HashSize);
+    ImgHash = AllocateZeroPool (HashSize);
     if (ImgHash == NULL) {
         DEBUG ((EFI_D_ERROR, "kernel image hash buffer allocation failed!\n"));
         Status = EFI_OUT_OF_RESOURCES;
@@ -1160,7 +1226,11 @@ STATIC EFI_STATUS LoadImageAndAuthForLE (BootInfo *Info)
 
 skip_verification:
     if (!IsRootCmdLineUpdated (Info)) {
-        SystemPathLen = GetSystemPath (&SystemPath, Info);
+        SystemPathLen = GetSystemPath (&SystemPath,
+                                       Info->MultiSlotBoot,
+                                       Info->BootIntoRecovery,
+                                       (CHAR16 *)L"system",
+                                       (CHAR8 *)"root");
         if (SystemPathLen == 0 ||
             SystemPath == NULL) {
             return EFI_LOAD_ERROR;
