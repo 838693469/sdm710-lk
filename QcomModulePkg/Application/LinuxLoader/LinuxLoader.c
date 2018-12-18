@@ -353,6 +353,18 @@ LinuxLoaderEntry (IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
 #endif
         RebootDevice (EMERGENCY_DLOAD);
     }
+    if(KeyPressed == SCAN_FASTBOOT) {
+      DEBUG((EFI_D_INFO, "------Ctrl C - Enter  Fastboot Mode\n"));
+      BootIntoFastboot = TRUE;
+    }
+    else if(KeyPressed == SCAN_POWEROFF) {
+      DEBUG((EFI_D_INFO, "------Ctrl D - Enter  Poweroff Mode\n"));
+      ShutdownDevice();
+    }
+    else if(KeyPressed == SCAN_RECOVERY) {
+      DEBUG((EFI_D_INFO, "------Ctrl R - Enter  Recovery Mode\n"));
+      BootIntoRecovery = TRUE;
+    }
   } else if (Status == EFI_DEVICE_ERROR) {
     DEBUG ((EFI_D_ERROR, "Error reading key status: %r\n", Status));
     goto stack_guard_update_default;
