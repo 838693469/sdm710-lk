@@ -51,6 +51,7 @@
 CHAR8 boardID_cmdline[36] = {'\0'};  //bug400055 add board id info to uefi,gouji@wt,20181023
 CHAR8 g_SSN[30] = {'\0'}, g_PSN[30]={'\0'};//bug847136 add read ssn info,dingxiaobo@wt,20181102
 
+BOOLEAN uart_log_enable = FALSE;
 STATIC BOOLEAN BootReasonAlarm = FALSE;
 STATIC BOOLEAN BootIntoFastboot = FALSE;
 STATIC BOOLEAN BootIntoRecovery = FALSE;
@@ -364,6 +365,9 @@ LinuxLoaderEntry (IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
     else if(KeyPressed == SCAN_RECOVERY) {
       DEBUG((EFI_D_INFO, "------Ctrl R - Enter  Recovery Mode\n"));
       BootIntoRecovery = TRUE;
+    }else if(KeyPressed == SCAN_KERNEL_LOG){
+      DEBUG((EFI_D_INFO, "------Ctrl E / S - OPEN SERAIL LOG\n"));
+      uart_log_enable = TRUE;
     }
   } else if (Status == EFI_DEVICE_ERROR) {
     DEBUG ((EFI_D_ERROR, "Error reading key status: %r\n", Status));

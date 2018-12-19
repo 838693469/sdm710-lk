@@ -55,6 +55,7 @@ STATIC CONST CHAR8 *LogLevel = " quite";
 STATIC CONST CHAR8 *BatteryChgPause = " androidboot.mode=charger";
 STATIC CONST CHAR8 *MdtpActiveFlag = " mdtp";
 STATIC CONST CHAR8 *AlarmBootCmdLine = " androidboot.alarmboot=true";
+STATIC CONST CHAR8 *EnableUartLog = " enable_uart_log=";
 #ifdef WT_BOOT_REASON
 STATIC CONST CHAR8 *BootReasonCmdline = " androidboot.bootreason=";
 #endif
@@ -72,7 +73,7 @@ STATIC UINTN DisplayCmdLineLen = sizeof (DisplayCmdLine);
 #define MAX_DTBO_IDX_STR 64
 STATIC CHAR8 *AndroidBootDtboIdx = " androidboot.dtbo_idx=";
 extern CHAR8 boardID_cmdline[];//bug400055 add board id info to uefi,gouji@wt,20181023
-
+extern BOOLEAN uart_log_enable;
 STATIC EFI_STATUS
 TargetPauseForBatteryCharge (BOOLEAN *BatteryStatus)
 {
@@ -484,6 +485,17 @@ UpdateCmdLineParams (UpdateCmdLineParamList *Param,
     Param->LEVerityCmdLine = NULL;
   }
 
+
+  Src = EnableUartLog;
+  AsciiStrCatS (Dst, MaxCmdLineLen, Src);
+  if(!uart_log_enable &&  TargetBuildVariantUser()){
+    Src = "0";
+    AsciiStrCatS (Dst, MaxCmdLineLen, Src);
+  }else{
+    Src = "1";
+    AsciiStrCatS (Dst, MaxCmdLineLen, Src);
+  }
+
   return EFI_SUCCESS;
 }
 
@@ -633,6 +645,9 @@ UpdateCmdLine (CONST CHAR8 *CmdLine,
     if (!Recovery)
       CmdLineLen += AsciiStrLen (SkipRamFs);
   }
+
+  CmdLineLen  += AsciiStrLen (EnableUartLog);
+  CmdLineLen  += 1;
 
   GetDisplayCmdline ();
   CmdLineLen += AsciiStrLen (DisplayCmdLine);

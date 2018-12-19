@@ -54,11 +54,11 @@ GetKeyPress (UINT32 *KeyPressed)
   if (Status != EFI_SUCCESS)
     return Status;
 
-  DEBUG ((EFI_D_VERBOSE, "Key Stroke Read\n"));
-  DEBUG ((EFI_D_VERBOSE, "ScanCode = (0x%x), UnicodeChar =(0x%x)\n",
-          KeyData.Key.ScanCode, KeyData.Key.UnicodeChar));
-  DEBUG ((EFI_D_VERBOSE, "ShiftState=(0x%x), ToggleState==(0x%x)\n",
-          KeyData.KeyState.KeyShiftState, KeyData.KeyState.KeyToggleState));
+  //DEBUG ((EFI_D_VERBOSE, "Key Stroke Read\n"));
+  //DEBUG ((EFI_D_VERBOSE, "ScanCode = (0x%x), UnicodeChar =(0x%x)\n",
+  //        KeyData.Key.ScanCode, KeyData.Key.UnicodeChar));
+  //DEBUG ((EFI_D_VERBOSE, "ShiftState=(0x%x), ToggleState==(0x%x)\n",
+  //        KeyData.KeyState.KeyShiftState, KeyData.KeyState.KeyToggleState));
 
   Status = InputEx->Reset (InputEx, FALSE);
   if (Status != EFI_SUCCESS) {

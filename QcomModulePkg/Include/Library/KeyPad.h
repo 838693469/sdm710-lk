@@ -34,6 +34,7 @@
 #define SCAN_RECOVERY             0x0105
 #define SCAN_FASTBOOT             0x0107
 #define SCAN_POWEROFF             0x0108
+#define SCAN_KERNEL_LOG           0x0109
 EFI_STATUS
 GetKeyPress (UINT32 *KeyPressed);
 #endif
