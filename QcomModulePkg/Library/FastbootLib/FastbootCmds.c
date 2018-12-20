@@ -237,7 +237,7 @@ STATIC VOID
 FastbootPublishVar (IN CONST CHAR8 *Name, IN CONST CHAR8 *Value)
 {
   FASTBOOT_VAR *Var;
-  Var = AllocatePool (sizeof (*Var));
+  Var = AllocateZeroPool (sizeof (*Var));
   if (Var) {
     Var->next = Varlist;
     Varlist = Var;
@@ -483,13 +483,12 @@ STATIC VOID PopulateMultislotMetadata (VOID)
     FastbootPublishVar ("slot-count", SlotCountVar);
 
     /*Allocate memory for available number of slots*/
-    BootSlotInfo = AllocatePool (SlotCount * sizeof (struct GetVarSlotInfo));
+    BootSlotInfo = AllocateZeroPool (
+                         SlotCount * sizeof (struct GetVarSlotInfo));
     if (BootSlotInfo == NULL) {
       DEBUG ((EFI_D_ERROR, "Unable to allocate memory for BootSlotInfo\n"));
       return;
     }
-    gBS->SetMem ((VOID *)BootSlotInfo,
-                 SlotCount * sizeof (struct GetVarSlotInfo), 0);
     FastbootPublishSlotVars ();
     InitialPopulate = TRUE;
   } else {
@@ -637,7 +636,7 @@ HandleChunkTypeFill (sparse_header_t *sparse_header,
     return EFI_INVALID_PARAMETER;
   }
 
-  FillBuf = AllocatePool (sparse_header->blk_sz);
+  FillBuf = AllocateZeroPool (sparse_header->blk_sz);
   if (!FillBuf) {
     DEBUG ((EFI_D_ERROR, "Malloc failed for: CHUNK_TYPE_FILL\n"));
     return EFI_OUT_OF_RESOURCES;
@@ -2121,7 +2120,7 @@ FastbootRegister (IN CONST CHAR8 *prefix,
 {
   FASTBOOT_CMD *cmd;
 
-  cmd = AllocatePool (sizeof (*cmd));
+  cmd = AllocateZeroPool (sizeof (*cmd));
   if (cmd) {
     cmd->prefix = prefix;
     cmd->prefix_len = AsciiStrLen (prefix);
@@ -2804,7 +2803,7 @@ CheckPartitionFsSignature (IN CHAR16 *PartName,
   }
 
   BlkSz = BlockIo->Media->BlockSize;
-  FsSuperBlkBuffer = AllocatePool (BlkSz);
+  FsSuperBlkBuffer = AllocateZeroPool (BlkSz);
   if (!FsSuperBlkBuffer) {
     DEBUG ((EFI_D_ERROR, "Failed to allocate buffer for superblock %s\n",
                             PartName));
@@ -3008,7 +3007,7 @@ ReadAllowUnlockValue (UINT32 *IsAllowUnlock)
   if (!BlockIo)
     return EFI_NOT_FOUND;
 
-  Buffer = AllocatePool (BlockIo->Media->BlockSize);
+  Buffer = AllocateZeroPool (BlockIo->Media->BlockSize);
   if (!Buffer) {
     DEBUG ((EFI_D_ERROR, "Failed to allocate memory for unlock value \n"));
     return EFI_OUT_OF_RESOURCES;

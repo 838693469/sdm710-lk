@@ -44,6 +44,8 @@
 #include <Library/StackCanary.h>
 #include <Protocol/EFITlmm.h>
 #include <Library/wt_system_monitor.h>
+#include <Library/HypervisorMvCalls.h>
+
 #define MAX_APP_STR_LEN 64
 #define MAX_NUM_FS 10
 #define DEFAULT_STACK_CHK_GUARD 0xc0c0c0c0
@@ -82,7 +84,7 @@ AllocateUnSafeStackPtr (VOID)
 
   EFI_STATUS Status = EFI_SUCCESS;
 
-  UnSafeStackPtr = AllocatePool (BOOT_LOADER_MAX_UNSAFE_STACK_SIZE);
+  UnSafeStackPtr = AllocateZeroPool (BOOT_LOADER_MAX_UNSAFE_STACK_SIZE);
   if (UnSafeStackPtr == NULL) {
     DEBUG ((EFI_D_ERROR, "Failed to Allocate memory for UnSafeStack \n"));
     Status = EFI_OUT_OF_RESOURCES;
@@ -440,6 +442,9 @@ LinuxLoaderEntry (IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
   DEBUG ((EFI_D_INFO, "KeyPress:%u, BootReason:%u\n", KeyPressed, BootReason));
   DEBUG ((EFI_D_INFO, "Fastboot=%d, Recovery:%d\n",
                                           BootIntoFastboot, BootIntoRecovery));
+  if (!GetVmData ()) {
+    DEBUG ((EFI_D_ERROR, "VM Hyp calls not present\n"));
+  }
 
   if (!BootIntoFastboot) {
     BootInfo Info = {0};
