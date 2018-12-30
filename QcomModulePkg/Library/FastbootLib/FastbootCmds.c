@@ -2992,6 +2992,49 @@ PublishGetVarPartitionInfo (
   return RetStatus;
 }
 
+
+STATIC EFI_STATUS
+WriteAllowUnlockValue(IN UINT32 IsAllowUnlock)
+{
+ EFI_STATUS Status;
+ EFI_BLOCK_IO_PROTOCOL *BlockIo = NULL;
+ EFI_HANDLE *Handle = NULL;
+ UINT8 *Buffer;
+
+ Status = PartitionGetInfo ((CHAR16 *)L"frp", &BlockIo, &Handle);
+ if (Status != EFI_SUCCESS) 
+  return Status;
+if (!BlockIo)
+  return EFI_NOT_FOUND;
+
+ Buffer = AllocatePool (BlockIo->Media->BlockSize);
+ if (!Buffer) {
+   DEBUG ((EFI_D_ERROR, "Failed to allocate memory for unlock value \n"));
+   return EFI_OUT_OF_RESOURCES;
+
+}
+
+
+Status = BlockIo->ReadBlocks (BlockIo, BlockIo->Media->MediaId,
+                               BlockIo->Media->LastBlock,
+                               BlockIo->Media->BlockSize, Buffer);
+
+if (Status != EFI_SUCCESS)
+  
+goto Exit;
+
+ /* IsAllowUnlock value stored at the LSB of last byte*/
+ Buffer[BlockIo->Media->BlockSize - 1] = (IsAllowUnlock & 0x01);
+
+
+Status = BlockIo->WriteBlocks (BlockIo, BlockIo->Media->MediaId,
+                               BlockIo->Media->LastBlock,
+                               BlockIo->Media->BlockSize, Buffer);
+
+Exit:
+ FreePool (Buffer);
+ return Status;
+}
 STATIC EFI_STATUS
 ReadAllowUnlockValue (UINT32 *IsAllowUnlock)
 {
@@ -3080,6 +3123,34 @@ STATIC VOID CmdOemGetBKLog(CONST CHAR8 *arg, VOID *data, UINT32 sz)
 	}
 	FastbootOkay("");
 }
+
+
+STATIC VOID
+CmdFlashingFrpLock (CONST CHAR8 *arg, VOID *data, UINT32 sz)
+{
+  CHAR8 Buffer[MAX_RSP_SIZE] = {0};
+  WriteAllowUnlockValue(0);
+    // Read Allow Ulock Flag
+  ReadAllowUnlockValue (&IsAllowUnlock);
+  DEBUG ((EFI_D_VERBOSE, "IsAllowUnlock is %d", IsAllowUnlock));
+  AsciiSPrint (Buffer, sizeof (Buffer), "IsAllowUnlock is %d\n",
+                IsAllowUnlock);
+  FastbootInfo(Buffer);
+}
+
+STATIC VOID
+CmdFlashingFrpUnlock (CONST CHAR8 *arg, VOID *data, UINT32 sz)
+{
+  CHAR8 Buffer[MAX_RSP_SIZE] = {0};
+  WriteAllowUnlockValue(1);
+    // Read Allow Ulock Flag
+  ReadAllowUnlockValue (&IsAllowUnlock);
+  DEBUG ((EFI_D_VERBOSE, "IsAllowUnlock is %d\n", IsAllowUnlock));
+  AsciiSPrint (Buffer, sizeof (Buffer), "IsAllowUnlock is %d ",
+                IsAllowUnlock);
+
+  FastbootInfo(Buffer);
+}
 /* Registers all Stock commands, Publishes all stock variables
  * and partitiion sizes. base and size are the respective parameters
  * to the Fastboot Buffer used to store the downloaded image for flashing
@@ -3117,11 +3188,14 @@ FastbootCommandSetup (IN VOID *base, IN UINT32 size)
  */
       {"flash:", CmdFlash},
       {"erase:", CmdErase},
+      {"oem frp_unlock", CmdFlashingFrpUnlock},
+      {"oem frp_lock", CmdFlashingFrpLock},
 #ifdef ENABLE_UPDATE_PARTITIONS_CMDS      
       {"set_active", CmdSetActive},
       {"flashing get_unlock_ability", CmdFlashingGetUnlockAbility},
       {"flashing unlock", CmdFlashingUnlock},
       {"flashing lock", CmdFlashingLock},
+      {"oem lock", CmdFlashingLock},
 #endif
 /*
  *CAUTION(CRITICAL): Enabling these commands will allow changes to bootimage.
@@ -3218,8 +3292,7 @@ FastbootCommandSetup (IN VOID *base, IN UINT32 size)
                 BoardPlatformChipVersion ());
   FastbootPublishVar ("hw-revision", StrSocVersion);
 
-  AsciiSPrint (StrChipID, sizeof (StrChipID), "%x",
-                BoardPlatformRawChipId ());
+  BoardChipId(StrChipID,MAX_RSP_SIZE);
   FastbootPublishVar ("chipid", StrChipID);
 
 

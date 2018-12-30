@@ -626,6 +626,58 @@ UfsGetSetBootLun (UINT32 *UfsBootlun, BOOLEAN IsGet)
 }
 
 EFI_STATUS
+BoardChipId (CHAR8 *StrSerialNum, UINT32 Len)
+{
+
+  EFI_STATUS Status = EFI_INVALID_PARAMETER;
+  MEM_CARD_INFO CardInfoData;
+  EFI_MEM_CARDINFO_PROTOCOL *CardInfo;
+  UINT32 SerialNo;
+  HandleInfo HandleInfoList[HANDLE_MAX_INFO_LIST];
+  UINT32 MaxHandles = ARRAY_SIZE (HandleInfoList);
+  MemCardType Type = EMMC;
+
+  Type = CheckRootDeviceType ();
+  if (Type == UNKNOWN)
+    return EFI_NOT_FOUND;
+
+  Status = GetDeviceHandleInfo (HandleInfoList, MaxHandles, Type);
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  Status =
+      gBS->HandleProtocol (HandleInfoList[0].Handle,
+                           &gEfiMemCardInfoProtocolGuid, (VOID **)&CardInfo);
+  if (Status != EFI_SUCCESS) {
+    DEBUG ((EFI_D_ERROR, "Error locating MemCardInfoProtocol:%x\n", Status));
+    return Status;
+  }
+
+  if (CardInfo->GetCardInfo (CardInfo, &CardInfoData) == EFI_SUCCESS) {
+    if (Type == UFS) {
+      Status = gBS->CalculateCrc32 (CardInfoData.product_serial_num,
+                                    CardInfoData.serial_num_len, &SerialNo);
+      if (Status != EFI_SUCCESS) {
+        DEBUG ((EFI_D_ERROR,
+                "Error calculating Crc of the unicode serial number: %x\n",
+                Status));
+        return Status;
+      }
+      AsciiSPrint (StrSerialNum, Len, "%x", SerialNo);
+    } else {
+      AsciiSPrint (StrSerialNum, Len, "%x",
+                   *(UINT32 *)CardInfoData.product_serial_num);
+    }
+
+    /* adb is case sensitive, convert the serial number to lower case
+     * to maintain uniformity across the system. */
+    ToLower (StrSerialNum);
+  }
+  return Status;
+}
+
+EFI_STATUS
 BoardSerialNum (CHAR8 *StrSerialNum, UINT32 Len)
 {
   //bug847136 add read ssn info,dingxiaobo@wt,20181103 start

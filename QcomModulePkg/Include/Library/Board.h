@@ -75,6 +75,8 @@ EFI_STATUS BoardInit (VOID);
 
 EFI_STATUS
 BoardSerialNum (CHAR8 *StrSerialNum, UINT32 Len);
+EFI_STATUS
+BoardChipId (CHAR8 *StrSerialNum, UINT32 Len);
 UINT32 BoardPlatformRawChipId (VOID);
 CHAR8 *BoardPlatformChipBaseBand (VOID);
 EFIChipInfoVersionType BoardPlatformChipVersion (VOID);
