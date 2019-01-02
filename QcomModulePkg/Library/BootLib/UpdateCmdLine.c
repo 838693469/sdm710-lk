@@ -57,6 +57,8 @@ STATIC CONST CHAR8 *BatteryChgPause = " androidboot.mode=charger";
 STATIC CONST CHAR8 *MdtpActiveFlag = " mdtp";
 STATIC CONST CHAR8 *AlarmBootCmdLine = " androidboot.alarmboot=true";
 STATIC CONST CHAR8 *EnableUartLog = " enable_uart_log=";
+STATIC CONST CHAR8 *AndroidBootEfuse = " androidboot.efuse=";
+STATIC CONST CHAR8 *AndroidBootBlunlock = " androidboot.bl_unlock=";
 #ifdef WT_BOOT_REASON
 STATIC CONST CHAR8 *BootReasonCmdline = " androidboot.bootreason=";
 #endif
@@ -504,6 +506,27 @@ UpdateCmdLineParams (UpdateCmdLineParamList *Param,
     AsciiStrCatS (Dst, MaxCmdLineLen, Src);
   }
 
+  Src = AndroidBootEfuse;
+  AsciiStrCatS (Dst, MaxCmdLineLen, Src);
+  if(!IsSecureBootEnabled() ){
+    Src = "0";
+    AsciiStrCatS (Dst, MaxCmdLineLen, Src);
+  }else{
+    Src = "1";
+    AsciiStrCatS (Dst, MaxCmdLineLen, Src);
+  }
+
+  Src = AndroidBootBlunlock;
+  AsciiStrCatS (Dst, MaxCmdLineLen, Src);
+  if(!IsUnlocked()){
+    Src = "0";
+    AsciiStrCatS (Dst, MaxCmdLineLen, Src);
+  }else{
+    Src = "1";
+    AsciiStrCatS (Dst, MaxCmdLineLen, Src);
+  }
+
+
   /* Update commandline for VM System partition */
   if (Param->CvmSystemPtnCmdLine) {
     Src = Param->CvmSystemPtnCmdLine;
@@ -662,6 +685,13 @@ UpdateCmdLine (CONST CHAR8 *CmdLine,
 
   CmdLineLen  += AsciiStrLen (EnableUartLog);
   CmdLineLen  += 1;
+
+  CmdLineLen  += AsciiStrLen (AndroidBootEfuse);
+  CmdLineLen  += 1;
+
+  CmdLineLen  += AsciiStrLen (AndroidBootBlunlock);
+  CmdLineLen  += 1;
+
 
   GetDisplayCmdline ();
   CmdLineLen += AsciiStrLen (DisplayCmdLine);
