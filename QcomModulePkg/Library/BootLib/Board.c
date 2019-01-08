@@ -406,29 +406,6 @@ GetPageSize (UINT32 *PageSize)
 #define WT_PHONEINFO_ssn 30
 #define WT_SERIALNUM_LEN 15
 #define WT_BARCODE_LEN 64
-#define PRIVATE_SLOT_IDX_ROOT       (16)
-#define PRIVATE_SLOT_IDX_LOCK       (17)
-#define PRIVATE_SLOT_SIZE       (1024)
-#define ROOT_BUFFER_OFFSET      (2*1024*1024+PRIVATE_SLOT_IDX_ROOT * PRIVATE_SLOT_SIZE)
-#define LOCK_BUFFER_OFFSET      (2*1024*1024+PRIVATE_SLOT_IDX_LOCK * PRIVATE_SLOT_SIZE)
-#define MAGIC_NUMBER_LENGTH 16
-#define MAGIC_NUMBER 0x5A5A5A5A
-
-enum {
-  None,Root,Unroot,Lock,Lock_Report_Loss,Unlock
-};
-
-struct system_rtx {
-  unsigned int magic[MAGIC_NUMBER_LENGTH];
-  unsigned int product;
-  unsigned int enable;
-  unsigned int lock_state;
-};
-static struct system_rtx slotroot;
-static struct system_rtx slotlock;
-
-
-
 extern CHAR8 g_SSN[];
 extern EFI_STATUS PartitionGetInfo (
 IN CHAR16  *PartitionName,
@@ -487,11 +464,20 @@ EFI_STATUS BoardGetSSNPSN(CHAR8 *SSN, CHAR8 *PSN)
   DEBUG((EFI_D_VERBOSE, "read buffer ssn = %a ,--- len=%d --\n",SSN,AsciiStrLen(SSN)));
   DEBUG((EFI_D_VERBOSE, "read buffer psn = %a ,--- len=%d --\n",PSN,AsciiStrLen(PSN)));
 
-  AsciiStrnCpy((CHAR8 *)&slotroot,(const CHAR8 *)(Buffer+ROOT_BUFFER_OFFSET), PRIVATE_SLOT_SIZE);
-  AsciiStrnCpy((CHAR8 *)&slotlock,(const CHAR8 *)(Buffer+LOCK_BUFFER_OFFSET), PRIVATE_SLOT_SIZE);
 
-
-
+  //31-64 ssn
+/*
+  if(AsciiStrLen(Buffer) > WT_SERIALNUM_LEN)
+  {
+    DEBUG((EFI_D_ERROR,"ssn too long just get before 15 \n"));
+    AsciiStrnCpy(SSN,(const CHAR8 *)(Buffer+WT_PHONEINFO_ssn), WT_SERIALNUM_LEN);
+    SSN[WT_SERIALNUM_LEN] = '\0' ;
+  }else{
+    AsciiStrnCpy(SSN,(const CHAR8 *)(Buffer+WT_PHONEINFO_ssn), AsciiStrLen(Buffer));
+    SSN[AsciiStrLen(Buffer)] = '\0' ;
+  }
+  DEBUG((EFI_D_ERROR, "read buffer ssn = %a ,--- len=%d --\n",SSN,AsciiStrLen(SSN)));
+*/
   FreePool(Buffer);
   return Status;
 }
@@ -576,7 +562,7 @@ EFI_STATUS BoardInit (VOID)
 
   DEBUG ((EFI_D_VERBOSE, "== LK info ==\n"));
   DEBUG ((EFI_D_VERBOSE, "Meizu M1923 Smart Phone For Domain Official (%a)\n", WT_BUILD));
-  DEBUG ((EFI_D_VERBOSE, "Little Kernel ver (%a), (R:%d) (L:%d) Build Time %a\n", WT_LK_VERSION, slotroot.enable == 1 ? 1: 0, slotlock.lock_state == Lock ? 1: 0, WT_BUILD_TIME));
+  DEBUG ((EFI_D_VERBOSE, "Little Kernel ver (%a), (R:%a) (L:%d) Build Time %a\n", WT_LK_VERSION, "N", 0, WT_BUILD_TIME));
   DEBUG ((EFI_D_VERBOSE, "Raw Chip Id   : 0x%x\n",
           platform_board_info.RawChipId));
   DEBUG ((EFI_D_VERBOSE, "Chip Version  : 0x%x\n",

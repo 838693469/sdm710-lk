@@ -59,9 +59,6 @@ STATIC CONST CHAR8 *AlarmBootCmdLine = " androidboot.alarmboot=true";
 STATIC CONST CHAR8 *EnableUartLog = " enable_uart_log=";
 STATIC CONST CHAR8 *AndroidBootEfuse = " androidboot.efuse=";
 STATIC CONST CHAR8 *AndroidBootBlunlock = " androidboot.bl_unlock=";
-#ifdef WT_ATO_FACTORY_BUILD
-STATIC CONST CHAR8 *AndroidBootSelinux =  " androidboot.selinux=permissive";
-#endif
 #ifdef WT_BOOT_REASON
 STATIC CONST CHAR8 *BootReasonCmdline = " androidboot.bootreason=";
 #endif
@@ -529,10 +526,6 @@ UpdateCmdLineParams (UpdateCmdLineParamList *Param,
     AsciiStrCatS (Dst, MaxCmdLineLen, Src);
   }
 
-#ifdef WT_ATO_FACTORY_BUILD
-  Src = AndroidBootSelinux;
-  AsciiStrCatS (Dst, MaxCmdLineLen, Src);
-#endif
 
   /* Update commandline for VM System partition */
   if (Param->CvmSystemPtnCmdLine) {
@@ -699,10 +692,7 @@ UpdateCmdLine (CONST CHAR8 *CmdLine,
   CmdLineLen  += AsciiStrLen (AndroidBootBlunlock);
   CmdLineLen  += 1;
 
-#ifdef WT_ATO_FACTORY_BUILD
-  CmdLineLen += AsciiStrLen (AndroidBootSelinux);
-#endif
-  
+
   GetDisplayCmdline ();
   CmdLineLen += AsciiStrLen (DisplayCmdLine);
   
