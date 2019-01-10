@@ -346,8 +346,12 @@ LinuxLoaderEntry (IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
 
   Status = GetKeyPress (&KeyPressed);
   if (Status == EFI_SUCCESS) {
-    if (KeyPressed == SCAN_DOWN)
+    //+	EXTB871582 volumn down keypress & plugin usb,enter fastboot mode, liuzhigou.wt,20190110
+    if (KeyPressed == SCAN_DOWN || KeyPressed == SCAN_DELETE){
+	  DEBUG ((EFI_D_INFO, "KeyPress:%u, Enter  Fastboot Mode\n", KeyPressed));
       BootIntoFastboot = TRUE;
+    }
+    //- EXTB871582 volumn down keypress & plugin usb,enter fastboot mode, liuzhigou.wt,20190110
     if (KeyPressed == SCAN_UP)
       BootIntoRecovery = TRUE;
     if (KeyPressed == SCAN_ESC){
