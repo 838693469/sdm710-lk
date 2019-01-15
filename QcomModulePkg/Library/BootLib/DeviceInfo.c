@@ -246,7 +246,7 @@ EFI_STATUS DeviceInfoInit (VOID)
     DevInfo.user_public_key_length = 0;
     gBS->SetMem (DevInfo.rollback_index, sizeof (DevInfo.rollback_index), 0);
     gBS->SetMem (DevInfo.user_public_key, sizeof (DevInfo.user_public_key), 0);
-    if (IsSecureBootEnabled () && TargetBuildVariantUser() ) {
+    if (IsSecureBootEnabled ()) {
       DevInfo.is_unlocked = FALSE;
       DevInfo.is_unlock_critical = FALSE;
     } else {
