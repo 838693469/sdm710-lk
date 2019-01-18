@@ -79,6 +79,7 @@ STATIC UINTN DisplayCmdLineLen = sizeof (DisplayCmdLine);
 #define MAX_DTBO_IDX_STR 64
 STATIC CHAR8 *AndroidBootDtboIdx = " androidboot.dtbo_idx=";
 extern CHAR8 boardID_cmdline[];//bug400055 add board id info to uefi,gouji@wt,20181023
+extern CHAR8 project_name_cmdline[];//bug875090 add board id info to uefi,gouji@wt,20190117
 extern BOOLEAN uart_log_enable;
 STATIC EFI_STATUS
 TargetPauseForBatteryCharge (BOOLEAN *BatteryStatus)
@@ -388,6 +389,9 @@ UpdateCmdLineParams (UpdateCmdLineParamList *Param,
   //bug400055 add board id info to uefi,gouji@wt,20181023,start
   if (Param->HaveCmdLine) {
     Src = boardID_cmdline;
+    AsciiStrCatS (Dst, MaxCmdLineLen, Src);
+	
+    Src = project_name_cmdline;
     AsciiStrCatS (Dst, MaxCmdLineLen, Src);
   }
   //bug400055 add board id info to uefi,gouji@wt,20181023,end
@@ -705,6 +709,7 @@ UpdateCmdLine (CONST CHAR8 *CmdLine,
   CmdLineLen += AsciiStrLen (DisplayCmdLine);
   
   CmdLineLen += AsciiStrLen(boardID_cmdline);     //bug400055 add board id info to uefi,gouji@wt,20181023
+  CmdLineLen += AsciiStrLen(project_name_cmdline);     //bug875090 add board id info to uefi,gouji@wt,20190117
 
   if (!IsLEVariant ()) {
     DtboIdx = GetDtboIdx ();
