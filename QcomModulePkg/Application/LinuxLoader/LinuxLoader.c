@@ -50,8 +50,9 @@
 #define MAX_NUM_FS 10
 #define DEFAULT_STACK_CHK_GUARD 0xc0c0c0c0
 
-CHAR8 boardID_cmdline[36] = {'\0'};  //bug400055 add board id info to uefi,gouji@wt,20181023
+CHAR8 boardID_cmdline[48] = {'\0'};  //bug400055 add board id info to uefi,gouji@wt,20181023
 CHAR8 g_SSN[30] = {'\0'}, g_PSN[30]={'\0'};//bug847136 add read ssn info,dingxiaobo@wt,20181102
+CHAR8 project_name_cmdline[48] = {'\0'};  //bug875090 add board id info to uefi,gouji@wt,20190117
 
 BOOLEAN uart_log_enable = FALSE;
 STATIC BOOLEAN BootReasonAlarm = FALSE;
@@ -73,6 +74,14 @@ STATIC struct board_resistor_name board_id_arr[] =
 	{0, "Reserved"},
 	{1, "K81923EA1"},
 	{2, "K81923DA1"},
+	{3, "K81923AA1"},
+};
+
+STATIC struct board_resistor_name project_name_arr[] =
+{
+	{0, "Reserved"},
+	{1, "K81923EA1"},
+	{2, "K81923FA1"},
 	{3, "K81923AA1"},
 };
 //bug400055 add board id info to uefi,gouji@wt,20181023,end
@@ -306,7 +315,12 @@ LinuxLoaderEntry (IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
 	   //board_index = i;
 	   AsciiStrnCpy(boardID_cmdline, " androidboot.board_id=", AsciiStrLen(" andriodboot.board_id="));
 	   AsciiStrCat(boardID_cmdline, board_id_arr[i].board_name);
+	   //project name
+	   AsciiStrnCpy(project_name_cmdline, " androidboot.project_name=", AsciiStrLen(" androidboot.project_name="));
+	   AsciiStrCat(project_name_cmdline, project_name_arr[i].board_name);
+	   
 	   DEBUG((EFI_D_INFO, "Success gain %a\n",boardID_cmdline));
+	   DEBUG((EFI_D_INFO, "Success gain %a\n",project_name_cmdline));
 	   break;
     }
   }
