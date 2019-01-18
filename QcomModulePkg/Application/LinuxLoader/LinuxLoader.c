@@ -458,6 +458,9 @@ LinuxLoaderEntry (IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
     Status = LoadImageAndAuth (&Info);
     if (Status != EFI_SUCCESS) {
       DEBUG ((EFI_D_ERROR, "LoadImageAndAuth failed: %r\n", Status));
+
+      //ExtR841497, liulai.wt, ADD, 20190118, Forced to enter recovery mode after boot.img signature verification failed
+      RebootDevice (RECOVERY_MODE);
       goto fastboot;
     }
 
@@ -468,8 +471,8 @@ fastboot:
   DEBUG ((EFI_D_INFO, "Launching fastboot\n"));
   Status = FastbootInitialize ();
   if (EFI_ERROR (Status)) {
-    DEBUG ((EFI_D_ERROR, "Failed to Launch Fastboot App: %d\n", Status));
-    goto stack_guard_update_default;
+      DEBUG ((EFI_D_ERROR, "Failed to Launch Fastboot App: %d\n", Status));
+      goto stack_guard_update_default;
   }
 
 stack_guard_update_default:

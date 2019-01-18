@@ -856,6 +856,7 @@ LoadImageAndAuthVB2 (BootInfo *Info)
     NumRequestedPartition += 1;
     Result = avb_slot_verify (Ops, (CONST CHAR8 *CONST *)RequestedPartition,
                SlotSuffix, VerifyFlags, VerityFlags, &SlotData);
+
     if (AllowVerificationError &&
                ResultShouldContinue (Result)) {
       DEBUG ((EFI_D_ERROR, "State: Unlocked, AvbSlotVerify returned "
@@ -1333,7 +1334,8 @@ LoadImageAndAuth (BootInfo *Info)
     Status = MdtpProtocol->MdtpDeactivate (MdtpProtocol, FALSE);
   }
 
-  if (IsUnlocked () && Status != EFI_SUCCESS) {
+  //ExtR841497, liulai.wt, MODIFY, 20190118, Forced to enter recovery mode after boot.img signature verification failed
+  if (!IsUnlocked () && Status != EFI_SUCCESS) {
     DEBUG ((EFI_D_ERROR, "LoadImageAndAuth failed %r\n", Status));
     return Status;
   }
