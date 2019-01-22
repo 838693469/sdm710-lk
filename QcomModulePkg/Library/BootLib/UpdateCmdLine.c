@@ -363,6 +363,16 @@ GetSystemPath (CHAR8 **SysPath, BOOLEAN MultiSlotBoot,
   return AsciiStrLen (*SysPath);
 }
 
+//+Extb875571, liulai.wt, ADD, 20190122, Executing cat /proc/mz_info/sec should return Secure Chip
+UINTN wt_get_fuse_value()
+{
+    UINTN *fuse_addr = (UINTN *)0x780360;
+    DEBUG((EFI_D_INFO, "fuse_value = 0x%x\n", *fuse_addr));
+
+    return (*fuse_addr);
+}
+//-Extb875571, liulai.wt, ADD, 20190122, Executing cat /proc/mz_info/sec should return Secure Chip
+
 STATIC
 EFI_STATUS
 UpdateCmdLineParams (UpdateCmdLineParamList *Param,
@@ -515,7 +525,9 @@ UpdateCmdLineParams (UpdateCmdLineParamList *Param,
 
   Src = AndroidBootEfuse;
   AsciiStrCatS (Dst, MaxCmdLineLen, Src);
-  if(!IsSecureBootEnabled() ){
+  //Extb875571, liulai.wt, ADD, 20190122, Executing cat /proc/mz_info/sec should return Secure Chip
+  //if(!IsSecureBootEnabled() ){
+  if( !wt_get_fuse_value() ){
     Src = "0";
     AsciiStrCatS (Dst, MaxCmdLineLen, Src);
   }else{
