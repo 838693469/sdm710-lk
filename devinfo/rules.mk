@@ -1,10 +1,10 @@
 BOOT_DEVINFO_DIR := $(ANDROID_BUILD_TOP)/bootable/bootloader/edk2/devinfo
 
-DEVINFO_IMAGE_OUT := $(ANDROID_BUILD_TOP)/out/target/product/K81923AA1/
+DEVINFO_IMAGE_OUT := $(ANDROID_BUILD_TOP)/out/target/product/K81926AA1/
 
 DEVINFO_IMAGE := $(ANDROID_BUILD_TOP)/bootable/bootloader/edk2/devinfo/tools/devinfo.bin
 
-SW_VERSION := $(ANDROID_BUILD_TOP)/out/target/product/K81923AA1/sw_version
+SW_VERSION := $(ANDROID_BUILD_TOP)/out/target/product/K81926AA1/sw_version
 
 MACHINE_TYPE := 0x923
 PRELOADER_VER := 0x001
