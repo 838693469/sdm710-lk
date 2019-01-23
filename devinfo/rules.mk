@@ -6,7 +6,7 @@ DEVINFO_IMAGE := $(ANDROID_BUILD_TOP)/bootable/bootloader/edk2/devinfo/tools/dev
 
 SW_VERSION := $(ANDROID_BUILD_TOP)/out/target/product/K81926AA1/sw_version
 
-MACHINE_TYPE := 0x923
+MACHINE_TYPE := 0x926
 PRELOADER_VER := 0x001
 
 ifeq ($(TARGET_BUILD_VARIANT),user)
