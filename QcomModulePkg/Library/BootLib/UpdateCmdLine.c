@@ -64,6 +64,8 @@ STATIC CONST CHAR8 *AndroidBootSelinux =  " androidboot.selinux=permissive";
 #endif
 #ifdef WT_BOOT_REASON
 STATIC CONST CHAR8 *BootReasonCmdline = " androidboot.bootreason=";
+STATIC CHAR8 *bootreason = NULL;
+STATIC CHAR8 *bootreason_alarm = "alarmboot";
 #endif
 /*Send slot suffix in cmdline with which we have booted*/
 STATIC CHAR8 *AndroidSlotSuffix = " androidboot.slot_suffix=";
@@ -582,9 +584,6 @@ UpdateCmdLine (CONST CHAR8 *CmdLine,
   UpdateCmdLineParamList Param = {0};
   CHAR8 DtboIdxStr[MAX_DTBO_IDX_STR] = "\0";
   INT32 DtboIdx = INVALID_PTN;
-#ifdef WT_BOOT_REASON
-  CHAR8 *bootreason = NULL;
-#endif
   CHAR8 *LEVerityCmdLine = NULL;
   UINT32 LEVerityCmdLineLen = 0;
 
@@ -645,6 +644,8 @@ UpdateCmdLine (CONST CHAR8 *CmdLine,
   }
 #ifdef WT_BOOT_REASON
   bootreason = wt_boot_reason();
+  if(AlarmBoot)
+    bootreason = bootreason_alarm;
   CmdLineLen += AsciiStrLen(BootReasonCmdline);
   CmdLineLen += AsciiStrLen(bootreason);
 #endif

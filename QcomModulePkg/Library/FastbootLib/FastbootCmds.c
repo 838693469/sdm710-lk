@@ -2995,7 +2995,7 @@ PublishGetVarPartitionInfo (
   return RetStatus;
 }
 
-
+#ifndef USER_BUILD_VARIANT
 STATIC EFI_STATUS
 WriteAllowUnlockValue(IN UINT32 IsAllowUnlock)
 {
@@ -3038,6 +3038,7 @@ Exit:
  FreePool (Buffer);
  return Status;
 }
+#endif
 STATIC EFI_STATUS
 ReadAllowUnlockValue (UINT32 *IsAllowUnlock)
 {
@@ -3127,33 +3128,21 @@ STATIC VOID CmdOemGetBKLog(CONST CHAR8 *arg, VOID *data, UINT32 sz)
 	FastbootOkay("");
 }
 
-
+#ifndef USER_BUILD_VARIANT
 STATIC VOID
 CmdFlashingFrpLock (CONST CHAR8 *arg, VOID *data, UINT32 sz)
 {
-  CHAR8 Buffer[MAX_RSP_SIZE] = {0};
   WriteAllowUnlockValue(0);
-    // Read Allow Ulock Flag
-  ReadAllowUnlockValue (&IsAllowUnlock);
-  DEBUG ((EFI_D_VERBOSE, "IsAllowUnlock is %d", IsAllowUnlock));
-  AsciiSPrint (Buffer, sizeof (Buffer), "IsAllowUnlock is %d\n",
-                IsAllowUnlock);
-  FastbootInfo(Buffer);
+  FastbootOkay("");
 }
 
 STATIC VOID
 CmdFlashingFrpUnlock (CONST CHAR8 *arg, VOID *data, UINT32 sz)
 {
-  CHAR8 Buffer[MAX_RSP_SIZE] = {0};
   WriteAllowUnlockValue(1);
-    // Read Allow Ulock Flag
-  ReadAllowUnlockValue (&IsAllowUnlock);
-  DEBUG ((EFI_D_VERBOSE, "IsAllowUnlock is %d\n", IsAllowUnlock));
-  AsciiSPrint (Buffer, sizeof (Buffer), "IsAllowUnlock is %d ",
-                IsAllowUnlock);
-
-  FastbootInfo(Buffer);
+  FastbootOkay("");
 }
+#endif
 /* Registers all Stock commands, Publishes all stock variables
  * and partitiion sizes. base and size are the respective parameters
  * to the Fastboot Buffer used to store the downloaded image for flashing
@@ -3191,8 +3180,10 @@ FastbootCommandSetup (IN VOID *base, IN UINT32 size)
  */
       {"flash:", CmdFlash},
       {"erase:", CmdErase},
+#ifndef USER_BUILD_VARIANT      
       {"oem frp_unlock", CmdFlashingFrpUnlock},
       {"oem frp_lock", CmdFlashingFrpLock},
+#endif      
 #ifdef ENABLE_UPDATE_PARTITIONS_CMDS      
       {"set_active", CmdSetActive},
       {"flashing get_unlock_ability", CmdFlashingGetUnlockAbility},
