@@ -72,17 +72,17 @@ struct board_resistor_name
 STATIC struct board_resistor_name board_id_arr[] =
 {
 	{0, "Reserved"},
-	{1, "K81923EA1"},
-	{2, "K81923DA1"},
-	{3, "K81923AA1"},
+	{1, "K81926EA1"},
+	{2, "K81926DA1"},
+	{3, "K81926AA1"},
 };
 
 STATIC struct board_resistor_name project_name_arr[] =
 {
 	{0, "Reserved"},
-	{1, "K81923EA1"},
-	{2, "K81923FA1"},
-	{3, "K81923AA1"},
+	{1, "K81926EA1"},
+	{2, "K81926FA1"},
+	{3, "K81926AA1"},
 };
 //bug400055 add board id info to uefi,gouji@wt,20181023,end
 STATIC VOID* UnSafeStackPtr;
