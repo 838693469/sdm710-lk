@@ -428,6 +428,12 @@ static struct system_rtx slotroot;
 static struct system_rtx slotlock;
 
 
+BOOLEAN
+IsRoot(VOID)
+{
+  return slotroot.enable == 1;
+}
+
 extern CHAR8 g_SSN[];
 extern EFI_STATUS PartitionGetInfo (
 IN CHAR16  *PartitionName,
@@ -486,21 +492,26 @@ EFI_STATUS BoardGetSSNPSN(CHAR8 *SSN, CHAR8 *PSN)
   DEBUG((EFI_D_VERBOSE, "read buffer ssn = %a ,--- len=%d --\n",SSN,AsciiStrLen(SSN)));
   DEBUG((EFI_D_VERBOSE, "read buffer psn = %a ,--- len=%d --\n",PSN,AsciiStrLen(PSN)));
 
-  AsciiStrnCpy((CHAR8 *)&slotroot,(const CHAR8 *)(Buffer+ROOT_BUFFER_OFFSET), sizeof(struct system_rtx));
-  AsciiStrnCpy((CHAR8 *)&slotlock,(const CHAR8 *)(Buffer+LOCK_BUFFER_OFFSET), sizeof(struct system_rtx));
-  //31-64 ssn
-/*
-  if(AsciiStrLen(Buffer) > WT_SERIALNUM_LEN)
-  {
-    DEBUG((EFI_D_ERROR,"ssn too long just get before 15 \n"));
-    AsciiStrnCpy(SSN,(const CHAR8 *)(Buffer+WT_PHONEINFO_ssn), WT_SERIALNUM_LEN);
-    SSN[WT_SERIALNUM_LEN] = '\0' ;
-  }else{
-    AsciiStrnCpy(SSN,(const CHAR8 *)(Buffer+WT_PHONEINFO_ssn), AsciiStrLen(Buffer));
-    SSN[AsciiStrLen(Buffer)] = '\0' ;
+
+  Status = BlockIo->ReadBlocks(BlockIo,
+      BlockIo->Media->MediaId,
+      ROOT_BUFFER_OFFSET/BlockIo->Media->BlockSize,
+      BlockIo->Media->BlockSize,
+      Buffer);
+  if (Status != EFI_SUCCESS){
+    DEBUG((EFI_D_ERROR, "Failed to READ proinfo partition \n"));
+    return Status;
   }
-  DEBUG((EFI_D_ERROR, "read buffer ssn = %a ,--- len=%d --\n",SSN,AsciiStrLen(SSN)));
-*/
+
+  memcpy(&slotroot,Buffer, sizeof(struct system_rtx));
+
+
+  for(int i = 0; i < MAGIC_NUMBER_LENGTH; i++)
+  {
+    if(MAGIC_NUMBER != slotroot.magic[i])
+      slotroot.enable = 0;
+  }
+  DEBUG((EFI_D_VERBOSE, "ROOT enable : %d\n",slotroot.enable));
   FreePool(Buffer);
   return Status;
 }
@@ -598,7 +609,6 @@ EFI_STATUS BoardInit (VOID)
           platform_board_info.ChipBaseBand));
   DEBUG ((EFI_D_VERBOSE, "Fusion Value    : %d\n",
           platform_board_info.PlatformInfo.fusion));
-
   return Status;
 }
 
