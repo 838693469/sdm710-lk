@@ -1681,7 +1681,8 @@ CmdFlash (IN CONST CHAR8 *arg, IN VOID *data, IN UINT32 sz)
         StopUsbTimer ();
       } else {
         UsbTimerStarted = TRUE;
-        FastbootOkay ("");
+    //+ExtB878360,liulai@wingtech.com.wt,MODIFY,20190218, always stuck in Writing 'cache'...
+        //FastbootOkay ("");
       }
     }
 
@@ -1690,6 +1691,8 @@ CmdFlash (IN CONST CHAR8 *arg, IN VOID *data, IN UINT32 sz)
                                         mFlashDataBuffer, mFlashNumDataBytes);
 
     IsFlashComplete = TRUE;
+    FastbootOkay ("");
+    //-ExtB878360,liulai@wingtech.com.wt,MODIFY,20190218, always stuck in Writing 'cache'...
     StopUsbTimer ();
   } else if (!AsciiStrnCmp (UbiHeader->HdrMagic, UBI_HEADER_MAGIC, 4)) {
     FlashResult = HandleUbiImgFlash (PartitionName,
