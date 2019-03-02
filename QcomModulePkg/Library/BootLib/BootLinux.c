@@ -49,6 +49,9 @@
 #include "libfdt.h"
 #include <ufdt_overlay.h>
 
+//ExtB878208, linjiashuo@wt, shutdown device when cable is plug-out quickly after plugging in, 20190301
+#include <Protocol/EFIChargerEx.h>
+
 STATIC QCOM_SCM_MODE_SWITCH_PROTOCOL *pQcomScmModeSwitchProtocol = NULL;
 STATIC BOOLEAN BootDevImage;
 STATIC BOOLEAN IsVmComputed = FALSE;
@@ -803,6 +806,12 @@ BootLinux (BootInfo *Info)
   HypMsg Msg = {0};
   UINT32 RetVal;
 
+  //+ ExtB878208, linjiashuo@wt, shutdown device when cable is plug-out quickly after plug-in, 20190301
+  EFI_CHARGER_EX_PROTOCOL *ChgDetectProtocol;
+  BOOLEAN IsOffModeCharging = FALSE;
+  BOOLEAN IsChargerPresence = FALSE;
+  //- ExtB878208, linjiashuo@wt, shutdown device when cable is plug-out quickly after plug-in, 20190301
+
   HypBootInfo *HypInfo = GetVmData ();
   if (IsVmEnabled () &&
       HypInfo == NULL) {
@@ -955,6 +964,38 @@ BootLinux (BootInfo *Info)
     DEBUG ((EFI_D_ERROR, "Error updating cmdline. Device Error %r\n", Status));
     return Status;
   }
+
+  //+ ExtB878208, linjiashuo@wt, shutdown device when cable is plug-out quickly after plugging in, 20190301
+  Status = gBS->LocateProtocol (&gChargerExProtocolGuid, NULL,
+                                (VOID **)&ChgDetectProtocol);
+  if (Status == EFI_NOT_FOUND) {
+    DEBUG ((EFI_D_VERBOSE, "Charger Protocol is not available.\n"));
+    return Status;
+  } else if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "Error finding charger protocol: %r\n", Status));
+    return Status;
+  }
+
+  Status = ChgDetectProtocol->GetChargerPresence (&IsChargerPresence);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "Error getting IsChargerPresence info: %r\n", Status));
+    return Status;
+  }
+
+  Status = ChgDetectProtocol->IsOffModeCharging(&IsOffModeCharging);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "Error getting IsOffModeCharging info: %r\n", Status));
+    return Status;
+  }
+
+  DEBUG ((EFI_D_ERROR, "joshua: IsOffModeCharge=%d, IsChargerPresence=%d \n", IsOffModeCharging, IsChargerPresence));
+
+  if(IsOffModeCharging && !IsChargerPresence) {
+      DEBUG ((EFI_D_ERROR, "joshua: charging cable is plugged out, quit off-mode-charging, shutdown!!\n"));
+      ShutdownDevice();
+      return Status;
+  }
+  //- ExtB878208, linjiashuo@wt, shutdown device when cable is plug-out quickly after plugging in, 20190301
 
   Status = LoadAddrAndDTUpdate (&BootParamlistPtr);
   if (Status != EFI_SUCCESS) {
