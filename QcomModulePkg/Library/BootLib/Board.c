@@ -584,7 +584,7 @@ EFI_STATUS BoardInit (VOID)
   }
 
   DEBUG ((EFI_D_VERBOSE, "== LK info ==\n"));
-  DEBUG ((EFI_D_VERBOSE, "Meizu M1923 Smart Phone For Domain Official (%a)\n", WT_BUILD));
+  DEBUG ((EFI_D_VERBOSE, "Meizu M1926 Smart Phone For Domain Official (%a)\n", WT_BUILD));
   DEBUG ((EFI_D_VERBOSE, "Little Kernel ver (%a), (R:%d) (L:%d) Build Time %a\n", WT_LK_VERSION, slotroot.enable == 1 ? 1: 0, slotlock.lock_state == Lock ? 1: 0, WT_BUILD_TIME));
   DEBUG ((EFI_D_VERBOSE, "Raw Chip Id   : 0x%x\n",
           platform_board_info.RawChipId));
