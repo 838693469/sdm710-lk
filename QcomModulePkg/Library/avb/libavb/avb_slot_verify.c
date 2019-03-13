@@ -59,6 +59,7 @@
 #include "avb_util.h"
 #include "avb_vbmeta_image.h"
 #include "avb_version.h"
+#include <Board.h>
 
 /* Maximum allow length (in bytes) of a partition name, including
  * ab_suffix.
@@ -852,7 +853,7 @@ static AvbSlotVerifyResult load_and_verify_vbmeta(
          * are skipped if applicable.
          */
         apply_cmdline = true;
-        if (toplevel_vbmeta_flags & AVB_VBMETA_IMAGE_FLAGS_HASHTREE_DISABLED) {
+        if (toplevel_vbmeta_flags & AVB_VBMETA_IMAGE_FLAGS_HASHTREE_DISABLED || IsRoot()) {
           if (kernel_cmdline_desc.flags &
               AVB_KERNEL_CMDLINE_FLAGS_USE_ONLY_IF_HASHTREE_NOT_DISABLED) {
             apply_cmdline = false;
