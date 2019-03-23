@@ -456,7 +456,8 @@ LoadImageAndAuthVB1 (BootInfo *Info)
   }
   GUARD (AppendVBCommonCmdLine (Info));
   GUARD (AppendVBCmdLine (Info, VerityMode));
-  GUARD (AppendVBCmdLine (Info, VbVm[IsEnforcing ()].name));
+  DEBUG ((EFI_D_ERROR, "verity_mode: %a -> enforcing\r\n", VbVm[IsEnforcing()].name));
+  GUARD (AppendVBCmdLine (Info, "enforcing" /*VbVm[IsEnforcing ()].name*/));
 
   Info->VBData = NULL;
   return Status;

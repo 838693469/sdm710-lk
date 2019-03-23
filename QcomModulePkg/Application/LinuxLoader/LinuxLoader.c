@@ -425,9 +425,9 @@ LinuxLoaderEntry (IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
       goto stack_guard_update_default;
     }
     // write to device info
-    Status = EnableEnforcingMode (FALSE);
-    if (Status != EFI_SUCCESS)
-      goto stack_guard_update_default;
+    // Status = EnableEnforcingMode (FALSE);
+    // if (Status != EFI_SUCCESS)
+    //   goto stack_guard_update_default;
 
     break;
   case DM_VERITY_KEYSCLEAR:
